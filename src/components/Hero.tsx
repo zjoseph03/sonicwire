@@ -1,37 +1,27 @@
 import { ArrowRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+  const navigate = useNavigate();
   const benefits = ["Instant Quotes", "No Minimum Quantities", "Volumes of 1 to 10,000+"];
 
   return (
     <section className="relative min-h-screen flex items-center justify-center hero-bg hero-grid overflow-hidden pt-16">
-      {/* Large watermark logo */}
       <div className="absolute top-10 right-0 w-[500px] h-[500px] opacity-[0.06] pointer-events-none">
-        <svg viewBox="0 0 200 200" fill="hsl(28, 100%, 50%)" className="w-full h-full">
+        <svg viewBox="0 0 200 200" fill="hsl(221, 83%, 53%)" className="w-full h-full">
           <path d="M100 20 L130 60 L170 40 L150 80 L190 100 L150 120 L170 160 L130 140 L100 180 L70 140 L30 160 L50 120 L10 100 L50 80 L30 40 L70 60 Z" />
         </svg>
       </div>
 
       <div className="container mx-auto px-6 text-center relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2 mb-8 shadow-sm"
-        >
-          <span className="text-sm text-muted-foreground font-medium">BACKED BY</span>
-          <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded">Y</span>
-          <span className="text-sm font-semibold text-foreground">Combinator</span>
-        </motion.div>
-
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl md:text-7xl font-black text-foreground leading-tight mb-4"
         >
-          TEST TEST Sonic Wire Harnesses TEST TEST
+          Sonic Wire Harnesses
         </motion.h1>
 
         <motion.p
@@ -48,13 +38,13 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <a
-            href="#cta"
+          <button
+            onClick={() => navigate("/quote")}
             className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25"
           >
             Get Instant Pricing
             <ArrowRight className="w-5 h-5" />
-          </a>
+          </button>
         </motion.div>
 
         <motion.div
