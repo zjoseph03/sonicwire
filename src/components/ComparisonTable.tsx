@@ -1,0 +1,69 @@
+import { motion } from "framer-motion";
+
+const timelineData = [
+  { label: "Design & Quote", loombotic: "Instant", traditional: "1–2 weeks" },
+  { label: "Production", loombotic: "4–7 days", traditional: "4–6 weeks" },
+  { label: "Shipment", loombotic: "1–2 days", traditional: "3–5 days" },
+  { label: "Total Delivery", loombotic: "7–9 days", traditional: "5–7 weeks" },
+];
+
+const ComparisonTable = () => {
+  return (
+    <section className="py-24 bg-background">
+      <div className="container mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Built for Fast-Moving Hardware Teams
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Founded in 2024, we're rethinking how wire harnesses are made, combining automation with rapid turnaround.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-3xl mx-auto"
+        >
+          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            {/* Header */}
+            <div className="grid grid-cols-3 bg-secondary/50 border-b border-border">
+              <div className="px-6 py-4 text-sm font-semibold text-muted-foreground">Timeline</div>
+              <div className="px-6 py-4 text-sm font-semibold text-primary text-center flex items-center justify-center gap-2">
+                <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                  </svg>
+                </div>
+                Loombotic
+              </div>
+              <div className="px-6 py-4 text-sm font-semibold text-muted-foreground text-center">Traditional</div>
+            </div>
+
+            {/* Rows */}
+            {timelineData.map((row, index) => (
+              <div
+                key={row.label}
+                className={`grid grid-cols-3 ${index !== timelineData.length - 1 ? "border-b border-border" : ""} ${index === timelineData.length - 1 ? "bg-primary/5" : ""}`}
+              >
+                <div className="px-6 py-4 text-sm font-medium text-foreground">{row.label}</div>
+                <div className="px-6 py-4 text-sm font-bold text-primary text-center">{row.loombotic}</div>
+                <div className="px-6 py-4 text-sm text-muted-foreground text-center">{row.traditional}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default ComparisonTable;
