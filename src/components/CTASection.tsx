@@ -1,7 +1,10 @@
 import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const CTASection = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="cta" className="py-24 hero-bg hero-grid relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
@@ -22,19 +25,19 @@ const CTASection = () => {
             *Express orders dependent on part availability
           </p>
 
-          <a
-            href="#"
+          <button
+            onClick={() => navigate("/quote")}
             className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25 mb-6"
           >
             Get Instant Quote
             <ArrowRight className="w-5 h-5" />
-          </a>
+          </button>
 
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <span className="text-sm">Want to email us instead?</span>
-            <a href="mailto:build@loombotic.com" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+            <a href="mailto:zachjoseph@hotmail.com" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
               <Mail className="w-4 h-4" />
-              build@loombotic.com
+              zachjoseph@hotmail.com
             </a>
           </div>
         </motion.div>

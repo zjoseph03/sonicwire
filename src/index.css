@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 30 50% 97%;
+    --background: 220 30% 97%;
     --foreground: 220 20% 12%;
 
     --card: 0 0% 100%;
@@ -15,29 +15,29 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 12%;
 
-    --primary: 28 100% 50%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 30% 93%;
+    --secondary: 220 30% 93%;
     --secondary-foreground: 220 20% 12%;
 
-    --muted: 30 20% 94%;
+    --muted: 220 20% 94%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 28 100% 50%;
+    --accent: 221 83% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 28 100% 50%;
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    --hero-gradient: linear-gradient(180deg, hsl(30 50% 97%) 0%, hsl(30 60% 93%) 100%);
-    --grid-color: hsl(28 40% 85%);
+    --hero-gradient: linear-gradient(180deg, hsl(220 30% 97%) 0%, hsl(220 40% 93%) 100%);
+    --grid-color: hsl(221 30% 85%);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -56,19 +56,19 @@
     --card-foreground: 30 20% 95%;
     --popover: 220 20% 10%;
     --popover-foreground: 30 20% 95%;
-    --primary: 28 100% 50%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 15% 15%;
     --secondary-foreground: 30 20% 95%;
     --muted: 220 15% 15%;
     --muted-foreground: 220 10% 60%;
-    --accent: 28 100% 50%;
+    --accent: 221 83% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 15% 18%;
     --input: 220 15% 18%;
-    --ring: 28 100% 50%;
+    --ring: 221 83% 53%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -104,7 +104,7 @@
   }
 
   .text-gradient-primary {
-    background: linear-gradient(135deg, hsl(28 100% 50%), hsl(20 100% 55%));
+    background: linear-gradient(135deg, hsl(221 83% 53%), hsl(230 90% 60%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

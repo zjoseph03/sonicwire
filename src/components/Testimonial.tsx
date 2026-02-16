@@ -19,7 +19,7 @@ const Testimonial = () => {
             </div>
 
             <blockquote className="text-lg md:text-xl text-foreground leading-relaxed mb-8 font-medium">
-              "Loombotic really helped us out. 7 day lead times are a real unlock for us. Really easy to work with and great support even on low volume orders."
+              "SonicWire really helped us out. 7 day lead times are a real unlock for us. Really easy to work with and great support even on low volume orders."
             </blockquote>
 
             <div className="flex items-center justify-center gap-4">
