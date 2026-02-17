@@ -34,13 +34,12 @@ const ComparisonTable = () => {
           className="max-w-3xl mx-auto"
         >
           <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-            {/* Header */}
             <div className="grid grid-cols-3 bg-secondary/50 border-b border-border">
               <div className="px-6 py-4 text-sm font-semibold text-muted-foreground">Timeline</div>
               <div className="px-6 py-4 text-sm font-semibold text-primary text-center flex items-center justify-center gap-2">
                 <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white"/>
                   </svg>
                 </div>
                 SonicWire
@@ -48,7 +47,6 @@ const ComparisonTable = () => {
               <div className="px-6 py-4 text-sm font-semibold text-muted-foreground text-center">Traditional</div>
             </div>
 
-            {/* Rows */}
             {timelineData.map((row, index) => (
               <div
                 key={row.label}

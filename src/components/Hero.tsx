@@ -6,7 +6,6 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center hero-bg hero-grid overflow-hidden pt-16">
-      {/* Large watermark logo */}
       <div className="absolute top-10 right-0 w-[500px] h-[500px] opacity-[0.06] pointer-events-none">
         <svg viewBox="0 0 200 200" fill="hsl(210, 100%, 50%)" className="w-full h-full">
           <path d="M100 20 L130 60 L170 40 L150 80 L190 100 L150 120 L170 160 L130 140 L100 180 L70 140 L30 160 L50 120 L10 100 L50 80 L30 40 L70 60 Z" />
