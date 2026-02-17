@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 const timelineData = [
-  { label: "Design & Quote", loombotic: "Instant", traditional: "1–2 weeks" },
-  { label: "Production", loombotic: "4–7 days", traditional: "4–6 weeks" },
-  { label: "Shipment", loombotic: "1–2 days", traditional: "3–5 days" },
-  { label: "Total Delivery", loombotic: "7–9 days", traditional: "5–7 weeks" },
+  { label: "Design & Quote", sonicwire: "[X time]", traditional: "[X time]" },
+  { label: "Production", sonicwire: "[X time]", traditional: "[X time]" },
+  { label: "Shipment", sonicwire: "[X time]", traditional: "[X time]" },
+  { label: "Total Delivery", sonicwire: "[X time]", traditional: "[X time]" },
 ];
 
 const ComparisonTable = () => {
@@ -22,7 +22,7 @@ const ComparisonTable = () => {
             Built for Fast-Moving Hardware Teams
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Founded in 2024, we're rethinking how wire harnesses are made, combining automation with rapid turnaround.
+            [Your company description and value proposition goes here]
           </p>
         </motion.div>
 
@@ -43,7 +43,7 @@ const ComparisonTable = () => {
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
                   </svg>
                 </div>
-                Loombotic
+                SonicWire
               </div>
               <div className="px-6 py-4 text-sm font-semibold text-muted-foreground text-center">Traditional</div>
             </div>
@@ -55,7 +55,7 @@ const ComparisonTable = () => {
                 className={`grid grid-cols-3 ${index !== timelineData.length - 1 ? "border-b border-border" : ""} ${index === timelineData.length - 1 ? "bg-primary/5" : ""}`}
               >
                 <div className="px-6 py-4 text-sm font-medium text-foreground">{row.label}</div>
-                <div className="px-6 py-4 text-sm font-bold text-primary text-center">{row.loombotic}</div>
+                <div className="px-6 py-4 text-sm font-bold text-primary text-center">{row.sonicwire}</div>
                 <div className="px-6 py-4 text-sm text-muted-foreground text-center">{row.traditional}</div>
               </div>
             ))}

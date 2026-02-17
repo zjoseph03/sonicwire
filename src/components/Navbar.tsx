@@ -11,10 +11,10 @@ const Navbar = () => {
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
             </svg>
           </div>
-          <span className="text-xl font-bold text-foreground tracking-tight">loombotic</span>
+          <span className="text-xl font-bold text-foreground tracking-tight">SonicWire</span>
         </div>
         <motion.a
-          href="#cta"
+          href="/quote-request"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"
