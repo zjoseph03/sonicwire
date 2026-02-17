@@ -31,7 +31,7 @@ const Hero = () => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl md:text-7xl font-black text-foreground leading-tight mb-4"
         >
-          Custom Wire Harnesses
+          Sonic Wire Harnesses
         </motion.h1>
 
         <motion.p
