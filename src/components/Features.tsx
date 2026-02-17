@@ -5,17 +5,17 @@ const features = [
   {
     icon: Zap,
     title: "Rapid Production",
-    description: "Automated systems deliver finished harnesses in as little as 7 days, reducing lead times by 75%.",
+    description: "[Description of your rapid production capabilities and benefits]",
   },
   {
     icon: Layers,
     title: "Volume Flexibility",
-    description: "From single-unit prototypes to runs exceeding 10,000 units with consistent quality.",
+    description: "[Description of your volume flexibility and range]",
   },
   {
     icon: ShieldCheck,
     title: "Certified Quality",
-    description: "IPC/WHMA-A-620 certified technicians ensure compliance with industry standards.",
+    description: "[Description of your quality certifications and standards]",
   },
 ];
 
