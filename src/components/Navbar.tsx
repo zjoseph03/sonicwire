@@ -2,8 +2,15 @@ import { motion } from "framer-motion";
 
 const Navbar = () => {
   const handleQuoteClick = () => {
+    // Track in Clarity
     if (typeof window !== 'undefined' && (window as any).clarity) {
       (window as any).clarity('event', 'quote_button_navbar');
+    }
+    // Track in GA4
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'quote_button_click', {
+        button_location: 'navbar'
+      });
     }
   };
 
