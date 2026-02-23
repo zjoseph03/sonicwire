@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import ProcessFlow from "@/components/ProcessFlow";
 import ComparisonTable from "@/components/ComparisonTable";
-import Testimonial from "@/components/Testimonial";
 import Features from "@/components/Features";
 import CTASection from "@/components/CTASection";
 
@@ -10,9 +10,9 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <Hero />
-      <ComparisonTable />
-      <Testimonial />
+      <ProcessFlow />
       <Features />
+      <ComparisonTable />
       <CTASection />
     </div>
   );

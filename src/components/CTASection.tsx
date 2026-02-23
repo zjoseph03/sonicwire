@@ -24,7 +24,7 @@ const CTASection = () => {
 
           <a
             href="/quote-request"
-            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25 mb-6"
+            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-none font-bold text-lg hover:opacity-90 transition-all btn-shadow mb-6"
           >
             Get Instant Quote
             <ArrowRight className="w-5 h-5" />
