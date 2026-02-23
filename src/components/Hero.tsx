@@ -4,6 +4,12 @@ import { motion } from "framer-motion";
 const Hero = () => {
   const benefits = ["Instant Quotes", "No Minimum Quantities", "Production Volumes: [X to X+]"];
 
+  const handleQuoteClick = () => {
+    if (typeof window !== 'undefined' && (window as any).clarity) {
+      (window as any).clarity('event', 'quote_button_hero');
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center hero-bg hero-grid overflow-hidden pt-16">
       <div className="absolute top-10 right-0 w-[500px] h-[500px] opacity-[0.06] pointer-events-none">
@@ -38,6 +44,7 @@ const Hero = () => {
         >
           <a
             href="/quote-request"
+            onClick={handleQuoteClick}
             className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25"
           >
             Get Instant Pricing

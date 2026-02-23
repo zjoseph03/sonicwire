@@ -38,6 +38,11 @@ const QuoteRequest = () => {
       setFile(uploadedFile);
       console.log("File uploaded:", uploadedFile.name);
       
+      // Track PDF upload event
+      if (typeof window !== 'undefined' && (window as any).clarity) {
+        (window as any).clarity('event', 'pdf_uploaded');
+      }
+      
       // Move to processing step
       setStep("processing");
       
@@ -53,8 +58,13 @@ const QuoteRequest = () => {
         };
         setEstimate(mockEstimate);
         setStep("estimate");
+        
+        // Track estimate viewed event
+        if (typeof window !== 'undefined' && (window as any).clarity) {
+          (window as any).clarity('event', 'estimate_viewed');
+        }
       }, 3000);
-    }s
+    }
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -70,6 +80,11 @@ const QuoteRequest = () => {
     }
 
     console.log("Email submitted:", email, "at:", new Date().toISOString());
+    
+    // Track email submission event
+    if (typeof window !== 'undefined' && (window as any).clarity) {
+      (window as any).clarity('event', 'email_submitted');
+    }
     
     setStep("success");
     toast({

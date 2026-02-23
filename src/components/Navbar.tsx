@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 
 const Navbar = () => {
+  const handleQuoteClick = () => {
+    if (typeof window !== 'undefined' && (window as any).clarity) {
+      (window as any).clarity('event', 'quote_button_navbar');
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-6">
@@ -14,6 +20,7 @@ const Navbar = () => {
         </div>
         <motion.a
           href="/quote-request"
+          onClick={handleQuoteClick}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"

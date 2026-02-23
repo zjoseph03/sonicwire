@@ -2,6 +2,12 @@ import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 
 const CTASection = () => {
+  const handleQuoteClick = () => {
+    if (typeof window !== 'undefined' && (window as any).clarity) {
+      (window as any).clarity('event', 'quote_button_cta');
+    }
+  };
+
   return (
     <section id="cta" className="py-24 hero-bg hero-grid relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
@@ -24,6 +30,7 @@ const CTASection = () => {
 
           <a
             href="/quote-request"
+            onClick={handleQuoteClick}
             className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25 mb-6"
           >
             Get Instant Quote
