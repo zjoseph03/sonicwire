@@ -7,10 +7,9 @@ const steps = [
     id: "input",
     icon: Upload,
     title: "1. Input Your Specifications",
-    description: "Upload your design files, CAD drawings, or simply describe your wire harness requirements. Our system instantly validates compatibility and generates a quote.",
+    description: "Upload your PDF design files. Our system generates an instant quote.",
     features: [
-      "CAD file upload support",
-      "Real-time validation",
+      "PDF file upload support",
       "Instant quote generation",
       "Material selection",
     ],
@@ -19,21 +18,18 @@ const steps = [
     id: "processing",
     icon: Cpu,
     title: "2. Automated Processing",
-    description: "Our AI-powered manufacturing system optimizes your design for production. Wire cutting, stripping, and crimping are automated with precision machinery.",
+    description: "Our AI-powered manufacturing system optimizes your design for production.",
     features: [
       "AI-optimized routing",
-      "Automated wire cutting",
-      "Precision crimping",
-      "Quality checkpoints",
+      "Automated production",
     ],
   },
   {
     id: "assembly",
     icon: Package,
     title: "3. Assembly & Testing",
-    description: "Expert technicians assemble complex harnesses while automated systems handle standard configurations. Every harness undergoes rigorous testing before shipment.",
+    description: "Every harness undergoes rigorous testing before shipment.",
     features: [
-      "Hybrid automation",
       "Continuity testing",
       "Quality inspection",
       "Documentation generation",
@@ -102,7 +98,7 @@ const ProcessFlow = () => {
             Your Manufacturing Journey
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From specification to delivery in [X] simple steps
+            From specification to delivery in 4 simple steps
           </p>
         </motion.div>
 

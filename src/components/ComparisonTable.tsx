@@ -1,77 +1,49 @@
 import { motion } from "framer-motion";
-import { Clock, Zap, TrendingUp, CheckCircle } from "lucide-react";
+import { Clock, Zap, Package, Shield, Check, X } from "lucide-react";
 
 const specs = [
-  { 
-    icon: Zap, 
-    label: "Quote Response", 
-    value: "[X hours]", 
-    highlight: true,
-    description: "Lightning-fast quotes"
-  },
-  { 
-    icon: Clock, 
-    label: "Production Time", 
-    value: "[X days]", 
-    highlight: false,
-    description: "Rapid turnaround"
-  },
-  { 
-    icon: TrendingUp, 
-    label: "Min Order Qty", 
-    value: "[X units]", 
-    highlight: true,
-    description: "Low minimums"
-  },
-  { 
-    icon: CheckCircle, 
-    label: "Quality Standard", 
-    value: "ISO 9001", 
-    highlight: false,
-    description: "Certified excellence"
-  },
-  { 
-    icon: Zap, 
-    label: "Design Support", 
-    value: "24/7", 
-    highlight: true,
-    description: "Always available"
-  },
-  { 
-    icon: TrendingUp, 
-    label: "Scalability", 
-    value: "[X to X+]", 
-    highlight: false,
-    description: "Grows with you"
-  },
+  { icon: Zap, label: "Quote Response", value: "< 2 Hours" },
+  { icon: Clock, label: "Production Time", value: "7-14 Days" },
+  { icon: Package, label: "Min Order Qty", value: "1 Unit" },
+  { icon: Shield, label: "Quality Standard", value: "IPC/WHMA-A-620" },
+];
+
+const comparison = [
+  { feature: "Instant Online Quotes", sonicwire: true, traditional: false },
+  { feature: "No Minimum Order Quantity", sonicwire: true, traditional: false },
+  { feature: "7-14 Day Lead Times", sonicwire: true, traditional: false },
+  { feature: "24/7 Order Tracking", sonicwire: true, traditional: false },
+  { feature: "Transparent Pricing", sonicwire: true, traditional: false },
 ];
 
 const ComparisonTable = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-background to-muted/30">
+    <section className="py-24 bg-background relative">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Built for Fast-Moving Hardware Teams
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+            Built for Modern Manufacturing
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            [Your company description and value proposition goes here]
+            Engineered for speed, precision, and scalability from prototype to production.
           </p>
         </motion.div>
 
-        {/* Bento Box Grid Layout */}
+        {/* Key Specs Grid */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
         >
           {specs.map((spec, index) => (
             <motion.div
@@ -80,93 +52,62 @@ const ComparisonTable = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className={`glass-card glass-card-hover rounded-none p-6 relative overflow-hidden ${
-                index === 0 ? 'lg:col-span-2 lg:row-span-1' : ''
-              } ${
-                index === 2 ? 'md:col-span-2 lg:col-span-1' : ''
-              }`}
+              className="metric-card p-6 rounded-lg text-center"
             >
-              {/* Background gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <spec.icon className="w-6 h-6 text-primary" />
+              </div>
               
-              {/* Content */}
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`p-2 rounded-none ${spec.highlight ? 'bg-electric-blue' : 'bg-primary'}`}>
-                    <spec.icon className="w-5 h-5 text-white" />
-                  </div>
-                  {spec.highlight && (
-                    <div className="pulse-dot" />
-                  )}
-                </div>
-                
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  {spec.label}
-                </h3>
-                
-                <div className={`text-3xl font-bold mb-2 ${spec.highlight ? 'text-electric-blue' : 'text-foreground'}`}>
-                  {spec.value}
-                </div>
-                
-                <p className="text-sm text-muted-foreground">
-                  {spec.description}
-                </p>
+              <h3 className="text-xs font-mono font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                {spec.label}
+              </h3>
+              
+              <div className="text-2xl font-bold text-foreground font-mono">
+                {spec.value}
               </div>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Traditional vs SonicWire comparison */}
+        {/* Comparison Table */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="max-w-4xl mx-auto mt-12 grid md:grid-cols-2 gap-4"
+          className="max-w-4xl mx-auto"
         >
-          {/* Traditional */}
-          <div className="border-2 border-border rounded-none p-6 bg-background/50">
-            <h3 className="text-xl font-bold text-muted-foreground mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-muted-foreground" />
-              Traditional Manufacturing
-            </h3>
-            <ul className="space-y-3 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-destructive mt-1">✕</span>
-                <span>[X time] quote response</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-destructive mt-1">✕</span>
-                <span>High minimum orders</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-destructive mt-1">✕</span>
-                <span>Limited flexibility</span>
-              </li>
-            </ul>
-          </div>
+          <div className="industrial-card rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 border-b border-border">
+              <div className="text-sm font-mono font-semibold text-muted-foreground uppercase tracking-wider">
+                Capability
+              </div>
+              <div className="text-sm font-mono font-semibold text-primary uppercase tracking-wider text-center">
+                SonicWire
+              </div>
+              <div className="text-sm font-mono font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                Traditional
+              </div>
+            </div>
 
-          {/* SonicWire */}
-          <div className="glass-card border-glow-blue rounded-none p-6 relative overflow-hidden">
-            <div className="absolute top-3 right-3 pulse-dot" />
-            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-electric-blue" />
-              SonicWire Solution
-            </h3>
-            <ul className="space-y-3 text-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-electric-blue mt-1">✓</span>
-                <span>[X time] instant quotes</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-electric-blue mt-1">✓</span>
-                <span>Flexible order sizes</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-electric-blue mt-1">✓</span>
-                <span>Complete agility</span>
-              </li>
-            </ul>
+            {/* Rows */}
+            {comparison.map((row, index) => (
+              <div
+                key={row.feature}
+                className="grid grid-cols-3 gap-4 p-4 border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
+              >
+                <div className="text-sm font-medium text-foreground">
+                  {row.feature}
+                </div>
+                <div className="flex justify-center">
+                  <Check className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex justify-center">
+                  <X className="w-5 h-5 text-muted-foreground/40" />
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
