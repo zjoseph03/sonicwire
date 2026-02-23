@@ -42,6 +42,11 @@ const QuoteRequest = () => {
       if (typeof window !== 'undefined' && (window as any).clarity) {
         (window as any).clarity('event', 'pdf_uploaded');
       }
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'pdf_uploaded', {
+          file_name: uploadedFile.name
+        });
+      }
       
       // Move to processing step
       setStep("processing");
@@ -62,6 +67,12 @@ const QuoteRequest = () => {
         // Track estimate viewed event
         if (typeof window !== 'undefined' && (window as any).clarity) {
           (window as any).clarity('event', 'estimate_viewed');
+        }
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'estimate_viewed', {
+            production_time: mockEstimate.productionTime,
+            complexity: mockEstimate.complexity
+          });
         }
       }, 3000);
     }
@@ -84,6 +95,11 @@ const QuoteRequest = () => {
     // Track email submission event
     if (typeof window !== 'undefined' && (window as any).clarity) {
       (window as any).clarity('event', 'email_submitted');
+    }
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'generate_lead', {
+        value: 1
+      });
     }
     
     setStep("success");
