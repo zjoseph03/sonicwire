@@ -70,7 +70,7 @@ const QuoteRequest = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-card border border-border rounded-2xl p-8 shadow-lg"
+              className="glass-card border-glow-blue rounded-none p-8"
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
@@ -105,22 +105,25 @@ const QuoteRequest = () => {
               </form>
 
               <div className="mt-8 pt-8 border-t border-border">
-                <h3 className="font-semibold text-foreground mb-4">What you'll receive:</h3>
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  What you'll receive:
+                  <div className="pulse-dot" />
+                </h3>
                 <ul className="space-y-3 text-muted-foreground">
                   <li className="flex items-start gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-electric-blue mt-0.5 flex-shrink-0" />
                     <span>Detailed pricing information</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-electric-blue mt-0.5 flex-shrink-0" />
                     <span>Lead time estimates for your project</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-electric-blue mt-0.5 flex-shrink-0" />
                     <span>Technical specifications and capabilities</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-electric-blue mt-0.5 flex-shrink-0" />
                     <span>Next steps to get started</span>
                   </li>
                 </ul>
@@ -131,10 +134,11 @@ const QuoteRequest = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="bg-card border border-border rounded-2xl p-12 shadow-lg text-center"
+              className="glass-card border-glow-blue rounded-none p-12 text-center relative"
             >
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-8 h-8 text-primary" />
+              <div className="absolute top-4 right-4 pulse-dot" />
+              <div className="w-16 h-16 bg-electric-blue rounded-none flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-3">
                 Thank You!
@@ -142,7 +146,7 @@ const QuoteRequest = () => {
               <p className="text-muted-foreground mb-6">
                 We've received your request and will send quote information to:
               </p>
-              <p className="text-lg font-semibold text-primary mb-8">
+              <p className="text-lg font-semibold text-electric-blue mb-8">
                 {email}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -157,7 +161,7 @@ const QuoteRequest = () => {
             </p>
             <a 
               href="mailto:zachjoseph@hotmail.com"
-              className="text-primary hover:underline font-semibold"
+              className="text-electric-blue hover:underline font-semibold"
             >
               outreach@sonicwire.com
             </a>
