@@ -2,6 +2,21 @@ import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Hero = () => {
+  const benefits = ["Instant Quotes", "No Minimum Quantities", "Production Volumes: [X to X+]"];
+
+  const handleQuoteClick = () => {
+    // Track in Clarity
+    if (typeof window !== 'undefined' && (window as any).clarity) {
+      (window as any).clarity('event', 'quote_button_hero');
+    }
+    // Track in GA4
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'quote_button_click', {
+        button_location: 'hero'
+      });
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-background overflow-hidden pt-16">
       <div className="container mx-auto px-6 text-center relative z-10">
@@ -154,7 +169,8 @@ const Hero = () => {
         >
           <a
             href="/quote-request"
-            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-none font-bold text-lg hover:opacity-90 transition-all btn-shadow"
+            onClick={handleQuoteClick}
+            className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/25"
           >
             Start Your Order
             <ArrowRight className="w-5 h-5" />
