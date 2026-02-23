@@ -32,7 +32,7 @@ const CTASection = () => {
 
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <span className="text-sm">Want to email us instead?</span>
-            <a href="mailto:zachjoseph@hotmail.com" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+            <a href="mailto:outreach@sonicwire.com" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
               <Mail className="w-4 h-4" />
               outreach@sonicwire.com
             </a>
