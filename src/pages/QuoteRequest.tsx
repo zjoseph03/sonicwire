@@ -113,19 +113,26 @@ const QuoteRequest = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="pt-32 pb-24 px-6">
-        <div className="container mx-auto max-w-2xl">
+      <section className="pt-32 pb-24 px-6 relative">
+        <div className="technical-grid absolute inset-0 opacity-20" />
+        <div className="container mx-auto max-w-2xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
+              <span className="pulse-dot" />
+              <span className="text-sm font-mono font-medium text-primary uppercase tracking-wider">
+                Instant Quote System
+              </span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Get Your Instant Quote
+              Get Your Production Timeline
             </h1>
             <p className="text-lg text-muted-foreground">
-              Upload your schematic and get an instant production timeline estimate
+              Upload your schematic and receive an instant production estimate
             </p>
           </motion.div>
 
@@ -138,7 +145,7 @@ const QuoteRequest = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="glass-card border-glow-blue rounded-none p-8"
+                className="industrial-card rounded-lg p-8"
               >
                 <div className="text-center mb-8">
                   <div className="w-20 h-20 bg-primary/10 rounded-none flex items-center justify-center mx-auto mb-4">
@@ -206,7 +213,7 @@ const QuoteRequest = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.5 }}
-                className="glass-card rounded-none p-12 text-center"
+                className="industrial-card rounded-lg p-12 text-center"
               >
                 <div className="w-20 h-20 bg-primary rounded-none flex items-center justify-center mx-auto mb-6 animate-pulse">
                   <Zap className="w-10 h-10 text-white" />
@@ -252,7 +259,7 @@ const QuoteRequest = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-6"
               >
-                <div className="glass-card border-glow-blue rounded-none p-8">
+                <div className="industrial-card rounded-lg p-8">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 bg-primary rounded-none flex items-center justify-center">
                       <CheckCircle className="w-8 h-8 text-white" />
@@ -269,7 +276,7 @@ const QuoteRequest = () => {
 
                   {/* Timeline Cards */}
                   <div className="grid md:grid-cols-3 gap-4 mb-6">
-                    <div className="glass-card rounded-none p-6 text-center">
+                    <div className="industrial-card rounded-lg p-6 text-center">
                       <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
                       <div className="text-3xl font-bold text-foreground mb-1">
                         {estimate.productionTime}
@@ -279,7 +286,7 @@ const QuoteRequest = () => {
                       </div>
                     </div>
 
-                    <div className="glass-card rounded-none p-6 text-center">
+                    <div className="industrial-card rounded-lg p-6 text-center">
                       <Package className="w-8 h-8 text-primary mx-auto mb-3" />
                       <div className="text-3xl font-bold text-foreground mb-1">
                         {estimate.shippingTime}
@@ -289,7 +296,7 @@ const QuoteRequest = () => {
                       </div>
                     </div>
 
-                    <div className="glass-card rounded-none p-6 text-center">
+                    <div className="industrial-card rounded-lg p-6 text-center">
                       <Zap className="w-8 h-8 text-primary mx-auto mb-3" />
                       <div className="text-3xl font-bold text-foreground mb-1">
                         {estimate.totalTime}
@@ -314,7 +321,7 @@ const QuoteRequest = () => {
                 </div>
 
                 {/* Email Collection */}
-                <div className="glass-card rounded-none p-8">
+                <div className="industrial-card rounded-lg p-8">
                   <h3 className="text-xl font-bold text-foreground mb-4">
                     Get Detailed Quote
                   </h3>
@@ -371,7 +378,7 @@ const QuoteRequest = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.5 }}
-                className="glass-card border-glow-blue rounded-none p-12 text-center relative"
+                className="industrial-card rounded-lg p-12 text-center relative"
               >
                 <div className="absolute top-4 right-4 pulse-dot" />
                 <div className="w-16 h-16 bg-primary rounded-none flex items-center justify-center mx-auto mb-6">
