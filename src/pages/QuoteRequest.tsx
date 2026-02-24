@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
 
 const QuoteRequest = () => {
   const [step, setStep] = useState<"upload" | "processing" | "estimate" | "email" | "success">("upload");
@@ -78,7 +79,7 @@ const QuoteRequest = () => {
     }
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !email.includes("@")) {
@@ -91,6 +92,32 @@ const QuoteRequest = () => {
     }
 
     console.log("Email submitted:", email, "at:", new Date().toISOString());
+    
+    // Save to Supabase
+    try {
+      const { error } = await supabase
+        .from('quote_requests' as any)
+        .insert({
+          email: email,
+          file_name: file?.name || null,
+          production_time: estimate.productionTime,
+          shipping_time: estimate.shippingTime,
+          total_time: estimate.totalTime,
+          complexity: estimate.complexity,
+          confidence: estimate.confidence
+        });
+
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        toast({
+          title: "Warning",
+          description: "Quote request saved locally, but there was an issue syncing to our database.",
+          variant: "default",
+        });
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
     
     // Track email submission event
     if (typeof window !== 'undefined' && (window as any).clarity) {
