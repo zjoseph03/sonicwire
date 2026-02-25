@@ -12,7 +12,6 @@ const comparison = [
   { feature: "Instant Online Quotes", sonicwire: true, traditional: false },
   { feature: "No Minimum Order Quantity", sonicwire: true, traditional: false },
   { feature: "7-14 Day Lead Times", sonicwire: true, traditional: false },
-  { feature: "24/7 Order Tracking", sonicwire: true, traditional: false },
   { feature: "Transparent Pricing", sonicwire: true, traditional: false },
 ];
 
