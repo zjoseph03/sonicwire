@@ -1,4 +1,4 @@
-import { Zap, Settings, Shield, Clock, TrendingUp } from "lucide-react";
+import { Zap, Settings, Shield, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
@@ -29,13 +29,6 @@ const features = [
     description: "Flexible manufacturing for prototypes through high-volume production runs.",
     metric: "Custom",
     metricLabel: "Solutions"
-  },
-  {
-    icon: TrendingUp,
-    title: "Real-Time Tracking",
-    description: "Monitor your order status from production floor to your loading dock.",
-    metric: "24/7",
-    metricLabel: "Access"
   },
 ];
 
