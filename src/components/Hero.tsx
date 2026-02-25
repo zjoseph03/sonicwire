@@ -47,17 +47,36 @@ const Hero = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground mb-12 text-center max-w-3xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-muted-foreground mb-8 text-center max-w-3xl mx-auto leading-relaxed"
           >
             Industrial automation meets rapid turnaround. Upload your schematic, receive instant quotes,
             and get production-ready harnesses delivered to your facility.
           </motion.p>
 
+          {/* Coming Soon Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex justify-center mb-12"
+          >
+            <a
+              href="#waitlist"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border-2 border-primary/50 px-6 py-3 rounded-full relative overflow-hidden group cursor-pointer hover:border-primary transition-colors"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              <span className="relative w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="relative text-base md:text-lg font-bold text-foreground tracking-wide">
+                Coming Soon — Join the Waitlist
+              </span>
+            </a>
+          </motion.div>
+
           {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
             className="flex justify-center mb-16"
           >
             <a
