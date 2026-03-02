@@ -50,9 +50,9 @@ const CTASection = () => {
               <span>Get Instant Quote</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <a href="mailto:outreach@sonicwire.com" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-medium">
+            <a href="mailto:outreach@sonicwire.ca" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-medium">
               <Mail className="w-5 h-5" />
-              <span>outreach@sonicwire.com</span>
+              <span>outreach@sonicwire.ca</span>
             </a>
           </div>
 
