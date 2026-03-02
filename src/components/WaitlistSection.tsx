@@ -147,8 +147,8 @@ const WaitlistSection = () => {
 
           <p className="text-sm text-muted-foreground">
             Questions? Contact us at{" "}
-            <a href="mailto:outreach@sonicwire.com" className="text-primary hover:underline">
-              outreach@sonicwire.com
+            <a href="mailto:outreach@sonicwire.ca" className="text-primary hover:underline">
+              outreach@sonicwire.ca
             </a>
           </p>
         </motion.div>

@@ -459,10 +459,10 @@ const QuoteRequest = () => {
               Have questions? Contact us directly:
             </p>
             <a 
-              href="mailto:outreach@sonicwire.com"
+              href="mailto:outreach@sonicwire.ca"
               className="text-primary hover:underline font-semibold"
             >
-              outreach@sonicwire.com
+              outreach@sonicwire.ca
             </a>
           </div>
         </div>
