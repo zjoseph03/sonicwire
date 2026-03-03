@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap } from "lucide-react";
+import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ const QuoteRequest = () => {
   const [step, setStep] = useState<"upload" | "processing" | "estimate" | "email" | "success">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [email, setEmail] = useState("");
+  const [showOptional, setShowOptional] = useState(false);
   const [estimate, setEstimate] = useState({
     productionTime: "12-15",
     shippingTime: "3-5",
@@ -172,62 +173,227 @@ const QuoteRequest = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="industrial-card rounded-lg p-8"
+                className="space-y-6"
               >
-                <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-primary/10 rounded-none flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-10 h-10 text-primary" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Upload Your Schematic
-                  </h2>
-                  <p className="text-muted-foreground">
-                    PDF format • Max 10MB • Wire harness diagrams or CAD files
-                  </p>
+                {/* Requirements Accordion */}
+                <div className="industrial-card rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setShowOptional(!showOptional)}
+                    className="w-full p-6 flex items-center justify-between hover:bg-muted/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-6 h-6 text-primary" />
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-foreground">
+                          Schematic Requirements
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Ensure your schematic includes these specifications
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${showOptional ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showOptional && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden border-t border-border"
+                      >
+                        <div className="p-6 space-y-6">
+                          {/* Required Section */}
+                          <div>
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-2 h-2 bg-primary rounded-full" />
+                              <h4 className="font-semibold text-foreground uppercase text-xs tracking-wider">
+                                Required
+                              </h4>
+                            </div>
+                            <ul className="space-y-3">
+                              <li className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Wire Count</div>
+                                  <div className="text-xs text-muted-foreground">Total number of individual wires</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Wire Lengths</div>
+                                  <div className="text-xs text-muted-foreground">Specified length for each wire segment</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Wire Gauge (AWG)</div>
+                                  <div className="text-xs text-muted-foreground">Gauge for each wire (e.g., 18 AWG, 22 AWG)</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Pinout Mapping</div>
+                                  <div className="text-xs text-muted-foreground">Which wire connects to which point/pin</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Total Quantity</div>
+                                  <div className="text-xs text-muted-foreground">Number of identical harnesses needed</div>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
+
+                          {/* Optional Section */}
+                          <div className="pt-6 border-t border-border">
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-2 h-2 bg-muted-foreground/50 rounded-full" />
+                              <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">
+                                Optional (Recommended)
+                              </h4>
+                            </div>
+                            <ul className="grid md:grid-cols-2 gap-3">
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Wire Colors</div>
+                                  <div className="text-xs text-muted-foreground">Color coding for identification</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Wire Insulation Type</div>
+                                  <div className="text-xs text-muted-foreground">PVC, PTFE, silicone</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Length Tolerances</div>
+                                  <div className="text-xs text-muted-foreground">Acceptable variance (e.g., ±5mm)</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Bundling Specifications</div>
+                                  <div className="text-xs text-muted-foreground">How wires should be grouped</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Routing Paths</div>
+                                  <div className="text-xs text-muted-foreground">Specific routing requirements</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Environmental Requirements</div>
+                                  <div className="text-xs text-muted-foreground">Temperature, moisture resistance</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Shielding</div>
+                                  <div className="text-xs text-muted-foreground">EMI shielding requirements</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Protective Sleeving</div>
+                                  <div className="text-xs text-muted-foreground">Heat shrink, braided sleeve</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Separation Requirements</div>
+                                  <div className="text-xs text-muted-foreground">Wires routed separately</div>
+                                </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 border-2 border-muted-foreground/50 rounded-full" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Labels/Markers</div>
+                                  <div className="text-xs text-muted-foreground">Wire identification labels</div>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                <label
-                  htmlFor="file-upload"
-                  className="block w-full border-2 border-dashed border-border hover:border-primary transition-colors rounded-none p-12 cursor-pointer group"
-                >
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <div className="text-center">
-                    <Upload className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors mx-auto mb-4" />
-                    <p className="text-foreground font-semibold mb-2">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      PDF files only
+                {/* Upload Section */}
+                <div className="industrial-card rounded-lg p-8">
+                  <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-primary/10 rounded-none flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-10 h-10 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
+                      Upload Your Schematic
+                    </h2>
+                    <p className="text-muted-foreground">
+                      PDF format • Max 10MB • Wire harness diagrams or CAD files
                     </p>
                   </div>
-                </label>
 
-                <div className="mt-8 pt-8 border-t border-border">
-                  <h3 className="font-semibold text-foreground mb-4">We'll analyze:</h3>
-                  <ul className="space-y-3 text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span>Wire count and complexity</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span>Connector types and quantities</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span>Production time estimate</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span>Shipping timeline</span>
-                    </li>
-                  </ul>
+                  <label
+                    htmlFor="file-upload"
+                    className="block w-full border-2 border-dashed border-border hover:border-primary transition-colors rounded-none p-12 cursor-pointer group"
+                  >
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <div className="text-center">
+                      <Upload className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors mx-auto mb-4" />
+                      <p className="text-foreground font-semibold mb-2">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        PDF files only
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </motion.div>
             )}
