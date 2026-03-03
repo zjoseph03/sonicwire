@@ -1,20 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield } from "lucide-react";
+import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield, Edit2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { parseSchematicPDF, type ParsedSpecifications } from "@/lib/gemini";
 
 const QuoteRequest = () => {
-  const [step, setStep] = useState<"upload" | "processing" | "estimate" | "email" | "success">("upload");
+  const [step, setStep] = useState<"upload" | "processing" | "review" | "estimate" | "email" | "success">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [email, setEmail] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [parsedSpecs, setParsedSpecs] = useState<ParsedSpecifications | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [estimate, setEstimate] = useState({
     productionTime: "12-15",
     shippingTime: "3-5",
@@ -67,18 +71,64 @@ const QuoteRequest = () => {
       // Move to processing step
       setStep("processing");
       
-      // Simulate processing delay
-      setTimeout(() => {
-        // Generate mock estimate
-        const mockEstimate = {
-          productionTime: Math.floor(Math.random() * 8 + 8) + "-" + Math.floor(Math.random() * 5 + 12),
-          shippingTime: "3-5",
-          totalTime: Math.floor(Math.random() * 10 + 12) + "-" + Math.floor(Math.random() * 5 + 18),
-          complexity: ["Low", "Medium", "High"][Math.floor(Math.random() * 3)],
-          confidence: ["Medium", "High", "Very High"][Math.floor(Math.random() * 3)]
-        };
-        setEstimate(mockEstimate);
-        setStep("estimate");
+      // Parse PDF via secure backend edge function
+      parseSchematicPDF(uploadedFile)
+        .then((specs) => {
+          setParsedSpecs(specs);
+          setStep("review");
+          
+          // Track successful parsing
+          if (typeof window !== 'undefined' && (window as any).clarity) {
+            (window as any).clarity('event', 'pdf_parsed_success');
+          }
+          if (typeof window !== 'undefined' && (window as any).gtag) {
+            (window as any).gtag('event', 'pdf_parsed', {
+              confidence: specs.confidence,
+              wire_count: specs.wireCount
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("PDF parsing error:", error);
+          console.error("Error details:", JSON.stringify(error, null, 2));
+          console.error("Error stack:", error?.stack);
+          toast({
+            title: "Parsing Error",
+            description: error instanceof Error ? error.message : "Failed to parse schematic. Please try again or contact support.",
+            variant: "destructive",
+          });
+          setStep("upload");
+          setFile(null);
+          
+          // Track parsing failure
+          if (typeof window !== 'undefined' && (window as any).clarity) {
+            (window as any).clarity('event', 'pdf_parsed_error');
+          }
+        });
+    }
+  };
+
+  const handleSpecsConfirmed = () => {
+    if (!parsedSpecs) return;
+    
+    // Move to estimate with confirmed specs
+    setStep("processing");
+    
+    // Simulate generating estimate based on specs
+    setTimeout(() => {
+      // Generate estimate based on complexity
+      const wireCount = parseInt(parsedSpecs.wireCount) || 0;
+      const baseTime = Math.max(7, Math.floor(wireCount / 5));
+      
+      const mockEstimate = {
+        productionTime: `${baseTime}-${baseTime + 3}`,
+        shippingTime: "3-5",
+        totalTime: `${baseTime + 3}-${baseTime + 8}`,
+        complexity: wireCount > 20 ? "High" : wireCount > 10 ? "Medium" : "Low",
+        confidence: parsedSpecs.confidence === "high" ? "High" : parsedSpecs.confidence === "medium" ? "Medium" : "Low"
+      };
+      setEstimate(mockEstimate);
+      setStep("estimate");
         
         // Track estimate viewed event
         if (typeof window !== 'undefined' && (window as any).clarity) {
@@ -90,8 +140,12 @@ const QuoteRequest = () => {
             complexity: mockEstimate.complexity
           });
         }
-      }, 3000);
-    }
+      }, 2000);
+  };
+
+  const updateParsedSpec = (field: keyof ParsedSpecifications, value: any) => {
+    if (!parsedSpecs) return;
+    setParsedSpecs({ ...parsedSpecs, [field]: value });
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -459,14 +513,14 @@ const QuoteRequest = () => {
                   <Zap className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-4">
-                  Analyzing Your Schematic
+                  Analyzing Your Schematic with AI
                 </h2>
                 <p className="text-muted-foreground mb-8">
                   Processing {file?.name}...
                 </p>
                 
                 <div className="space-y-4 max-w-md mx-auto">
-                  {["Extracting components", "Calculating complexity", "Estimating timeline"].map((task, index) => (
+                  {["Reading PDF document", "Extracting wire specifications", "Analyzing pinout mapping", "Generating timeline estimate"].map((task, index) => (
                     <motion.div
                       key={task}
                       initial={{ opacity: 0, x: -20 }}
@@ -489,7 +543,204 @@ const QuoteRequest = () => {
               </motion.div>
             )}
 
-            {/* Step 3: Estimate Results */}
+            {/* Step 3: Review Specifications */}
+            {step === "review" && parsedSpecs && (
+              <motion.div
+                key="review"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-6"
+              >
+                <div className="industrial-card rounded-lg p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-none flex items-center justify-center">
+                        <FileText className="w-8 h-8 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          Review Extracted Specifications
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          AI Confidence: <span className={`font-semibold ${parsedSpecs.confidence === 'high' ? 'text-green-600' : parsedSpecs.confidence === 'medium' ? 'text-yellow-600' : 'text-orange-600'}`}>{parsedSpecs.confidence.toUpperCase()}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={isEditing ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsEditing(!isEditing)}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      {isEditing ? "Done Editing" : "Edit"}
+                    </Button>
+                  </div>
+
+                  {parsedSpecs.notes && (
+                    <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">AI Notes:</p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">{parsedSpecs.notes}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Required Specifications */}
+                  <div className="space-y-4 mb-6">
+                    <h3 className="font-semibold text-foreground uppercase text-xs tracking-wider flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full" />
+                      Required Specifications
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">Wire Count</label>
+                        {isEditing ? (
+                          <Input
+                            value={parsedSpecs.wireCount}
+                            onChange={(e) => updateParsedSpec('wireCount', e.target.value)}
+                            className="h-10"
+                          />
+                        ) : (
+                          <p className="text-lg font-semibold text-foreground">{parsedSpecs.wireCount}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">Total Quantity</label>
+                        {isEditing ? (
+                          <Input
+                            value={parsedSpecs.totalQuantity}
+                            onChange={(e) => updateParsedSpec('totalQuantity', e.target.value)}
+                            className="h-10"
+                          />
+                        ) : (
+                          <p className="text-lg font-semibold text-foreground">{parsedSpecs.totalQuantity}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Wire Lengths</label>
+                      {isEditing ? (
+                        <Textarea
+                          value={parsedSpecs.wireLengths?.join(', ') || ''}
+                          onChange={(e) => updateParsedSpec('wireLengths', e.target.value.split(',').map(s => s.trim()))}
+                          placeholder="Separate lengths with commas"
+                          className="min-h-20"
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground">{parsedSpecs.wireLengths?.join(', ') || 'Not specified'}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Wire Gauges (AWG)</label>
+                      {isEditing ? (
+                        <Textarea
+                          value={parsedSpecs.wireGauges?.join(', ') || ''}
+                          onChange={(e) => updateParsedSpec('wireGauges', e.target.value.split(',').map(s => s.trim()))}
+                          placeholder="Separate gauges with commas"
+                          className="min-h-20"
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground">{parsedSpecs.wireGauges?.join(', ') || 'Not specified'}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Pinout Mapping</label>
+                      {isEditing ? (
+                        <Textarea
+                          value={parsedSpecs.pinoutMapping}
+                          onChange={(e) => updateParsedSpec('pinoutMapping', e.target.value)}
+                          placeholder="Describe wire to pin connections"
+                          className="min-h-24"
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{parsedSpecs.pinoutMapping}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Optional Specifications */}
+                  {(parsedSpecs.wireColors || parsedSpecs.insulationType || parsedSpecs.lengthTolerances) && (
+                    <div className="pt-6 border-t border-border space-y-4">
+                      <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
+                        <div className="w-2 h-2 bg-muted-foreground/50 rounded-full" />
+                        Optional Specifications Found
+                      </h3>
+                      
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Wire Colors:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.wireColors.join(', ')}</p>
+                          </div>
+                        )}
+                        {parsedSpecs.insulationType && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Insulation Type:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.insulationType}</p>
+                          </div>
+                        )}
+                        {parsedSpecs.lengthTolerances && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Length Tolerances:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.lengthTolerances}</p>
+                          </div>
+                        )}
+                        {parsedSpecs.bundlingSpecs && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Bundling:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.bundlingSpecs}</p>
+                          </div>
+                        )}
+                        {parsedSpecs.environmentalReqs && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Environmental:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.environmentalReqs}</p>
+                          </div>
+                        )}
+                        {parsedSpecs.shielding && (
+                          <div>
+                            <p className="font-medium text-foreground mb-1">Shielding:</p>
+                            <p className="text-muted-foreground">{parsedSpecs.shielding}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setStep("upload");
+                      setFile(null);
+                      setParsedSpecs(null);
+                    }}
+                  >
+                    ← Upload Different File
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={handleSpecsConfirmed}
+                    className="px-8"
+                  >
+                    Confirm & Generate Quote
+                    <CheckCircle className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 4: Estimate Results */}
             {step === "estimate" && (
               <motion.div
                 key="estimate"
