@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown } from "lucide-react";
+import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -394,6 +394,19 @@ const QuoteRequest = () => {
                       </p>
                     </div>
                   </label>
+
+                  {/* Privacy & Security Banner */}
+                  <div className="mt-6 p-4 bg-muted/30 border border-border rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-semibold text-foreground mb-1">Your IP is Protected</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          All files are encrypted and confidential. We never share your intellectual property or data with third parties. Your designs remain exclusively yours.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -544,9 +557,12 @@ const QuoteRequest = () => {
                     </Button>
                   </form>
 
-                  <p className="text-xs text-muted-foreground text-center mt-4">
-                    We respect your privacy. No spam, ever.
-                  </p>
+                  <div className="mt-4 p-3 bg-muted/20 border border-border rounded">
+                    <p className="text-xs text-muted-foreground text-center">
+                      <Shield className="w-3 h-3 inline mr-1" />
+                      Your information is secure and confidential. We never share your data or intellectual property.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="text-center">
