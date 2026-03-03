@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, CheckCircle, Loader2 } from "lucide-react";
+import { Mail, CheckCircle, Loader2, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +128,9 @@ const WaitlistSection = () => {
                   )}
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                We respect your privacy. Your email will never be shared or sold.
+              </p>
             </form>
           ) : (
             <motion.div
