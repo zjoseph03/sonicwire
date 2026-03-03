@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield, Edit2, AlertCircle } from "lucide-react";
+import Turnstile from "react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +18,7 @@ const QuoteRequest = () => {
   const [email, setEmail] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [parsedSpecs, setParsedSpecs] = useState<ParsedSpecifications | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [estimate, setEstimate] = useState({
@@ -42,6 +44,16 @@ const QuoteRequest = () => {
           variant: "destructive",
         });
         // Reset the file input
+        e.target.value = '';
+        return;
+      }
+      
+      if (!captchaToken) {
+        toast({
+          title: "Verification Required",
+          description: "Please complete the security check before uploading.",
+          variant: "destructive",
+        });
         e.target.value = '';
         return;
       }
@@ -72,7 +84,7 @@ const QuoteRequest = () => {
       setStep("processing");
       
       // Parse PDF via secure backend edge function
-      parseSchematicPDF(uploadedFile)
+      parseSchematicPDF(uploadedFile, captchaToken)
         .then((specs) => {
           setParsedSpecs(specs);
           setStep("review");
@@ -462,6 +474,24 @@ const QuoteRequest = () => {
                       </p>
                     </div>
                   </label>
+
+                  {/* Anti-Bot Verification */}
+                  <div className="mt-6 flex justify-center">
+                    <Turnstile
+                      // Using testing key for local dev. Replace with yours before deployment!
+                      sitekey="1x00000000000000000000AA" 
+                      onVerify={(token) => setCaptchaToken(token)}
+                      onError={() => {
+                        setCaptchaToken(null);
+                        toast({
+                          title: "Verification Failed",
+                          description: "Please try verifying again.",
+                          variant: "destructive",
+                        });
+                      }}
+                      onExpire={() => setCaptchaToken(null)}
+                    />
+                  </div>
 
                   {/* Privacy & Security Banner */}
                   <div className="mt-6 p-4 bg-muted/30 border border-border rounded-lg">
