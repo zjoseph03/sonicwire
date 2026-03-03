@@ -43,7 +43,6 @@ const steps = [
     features: [
       "Custom packaging",
       "Complete documentation",
-      "[X day] delivery",
     ],
   },
 ];
