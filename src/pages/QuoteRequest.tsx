@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 
 const QuoteRequest = () => {
@@ -12,6 +14,7 @@ const QuoteRequest = () => {
   const [file, setFile] = useState<File | null>(null);
   const [email, setEmail] = useState("");
   const [showOptional, setShowOptional] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [estimate, setEstimate] = useState({
     productionTime: "12-15",
     shippingTime: "3-5",
@@ -28,6 +31,17 @@ const QuoteRequest = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
     if (uploadedFile) {
+      if (!agreedToTerms) {
+        toast({
+          title: "Agreement Required",
+          description: "Please agree to the Terms of Service and Privacy Policy before uploading.",
+          variant: "destructive",
+        });
+        // Reset the file input
+        e.target.value = '';
+        return;
+      }
+      
       if (uploadedFile.type !== "application/pdf") {
         toast({
           title: "Invalid File Type",
@@ -407,6 +421,26 @@ const QuoteRequest = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Terms Agreement */}
+                  <div className="mt-6 flex items-start gap-3">
+                    <Checkbox 
+                      id="terms-agreement"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                      className="mt-1"
+                    />
+                    <label htmlFor="terms-agreement" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                      I agree to the{" "}
+                      <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        Terms of Service
+                      </a>
+                      {" "}and{" "}
+                      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -649,6 +683,7 @@ const QuoteRequest = () => {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };

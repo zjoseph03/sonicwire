@@ -5,6 +5,7 @@ import ComparisonTable from "@/components/ComparisonTable";
 import Features from "@/components/Features";
 import WaitlistSection from "@/components/WaitlistSection";
 import ComingSoonBanner from "@/components/ComingSoonBanner";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
       <Features />
       <ComparisonTable />
       <WaitlistSection />
+      <Footer />
     </div>
   );
 };
