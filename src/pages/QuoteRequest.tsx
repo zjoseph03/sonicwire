@@ -119,13 +119,30 @@ const QuoteRequest = () => {
     setTimeout(() => {
       // Generate estimate based on complexity
       const wireCount = parseInt(parsedSpecs.wireCount) || 0;
-      const baseTime = Math.max(7, Math.floor(wireCount / 5));
+      
+      // Calculate total length in feet
+      let totalLengthFt = 0;
+      parsedSpecs.wireLengths?.forEach((lenStr) => {
+        const match = lenStr.match(/([\d.]+)\s*([a-zA-Z"']*)/);
+        if (match) {
+           const val = parseFloat(match[1]);
+           const unit = match[2].toLowerCase().replace('.', '');
+           if (unit === 'm' || unit === 'meters') totalLengthFt += val * 3.28084; // meters
+           else if (unit === 'cm') totalLengthFt += val * 0.0328084;
+           else if (unit === 'mm') totalLengthFt += val * 0.00328084;
+           else if (unit.startsWith('in') || unit === '"') totalLengthFt += val / 12;
+           else if (unit.startsWith('ft') || unit === "'") totalLengthFt += val;
+           else totalLengthFt += val / 12; // Default to inches if unknown
+        }
+      });
+      
+      const baseTime = Math.max(2, Math.ceil(wireCount / 10) + Math.ceil(totalLengthFt / 100));
       
       const mockEstimate = {
         productionTime: `${baseTime}-${baseTime + 3}`,
         shippingTime: "3-5",
         totalTime: `${baseTime + 3}-${baseTime + 8}`,
-        complexity: wireCount > 20 ? "High" : wireCount > 10 ? "Medium" : "Low",
+        complexity: wireCount > 20 || totalLengthFt > 500 ? "High" : wireCount > 10 ? "Medium" : "Low",
         confidence: parsedSpecs.confidence === "high" ? "High" : parsedSpecs.confidence === "medium" ? "Medium" : "Low"
       };
       setEstimate(mockEstimate);
@@ -893,15 +910,23 @@ const QuoteRequest = () => {
                   </div>
                 </div>
 
-                <div className="text-center">
+                <div className="flex justify-center flex-col md:flex-row gap-4 mt-8 items-center">
+                  <button
+                    onClick={() => setStep("review")}
+                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    ← Back to Details
+                  </button>
+                  <span className="hidden md:inline text-muted-foreground">•</span>
                   <button
                     onClick={() => {
                       setFile(null);
+                      setParsedSpecs(null);
                       setStep("upload");
                     }}
                     className="text-sm text-primary hover:underline"
                   >
-                    ← Upload a different file
+                    Upload Different File
                   </button>
                 </div>
               </motion.div>
