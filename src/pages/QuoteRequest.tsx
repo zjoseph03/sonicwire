@@ -4,6 +4,7 @@ import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -623,31 +624,79 @@ const QuoteRequest = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Wire Lengths</label>
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-medium text-foreground">Wire Specifications</h3>
+                      
                       {isEditing ? (
-                        <Textarea
-                          value={parsedSpecs.wireLengths?.join(', ') || ''}
-                          onChange={(e) => updateParsedSpec('wireLengths', e.target.value.split(',').map(s => s.trim()))}
-                          placeholder="Separate lengths with commas"
-                          className="min-h-20"
-                        />
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Lengths</label>
+                            <Textarea
+                              value={parsedSpecs.wireLengths?.join(', ') || ''}
+                              onChange={(e) => updateParsedSpec('wireLengths', e.target.value.split(',').map(s => s.trim()))}
+                              placeholder="Separate lengths with commas"
+                              className="min-h-24 font-mono text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Gauges (AWG)</label>
+                            <Textarea
+                              value={parsedSpecs.wireGauges?.join(', ') || ''}
+                              onChange={(e) => updateParsedSpec('wireGauges', e.target.value.split(',').map(s => s.trim()))}
+                              placeholder="Separate gauges with commas"
+                              className="min-h-24 font-mono text-sm"
+                            />
+                          </div>
+                          {/* Allow editing colors if they exist or if user wants to add them */}
+                          <div className="space-y-2 col-span-2">
+                            <label className="text-xs text-muted-foreground">Wire Colors (Optional)</label>
+                            <Textarea
+                              value={parsedSpecs.wireColors?.join(', ') || ''}
+                              onChange={(e) => updateParsedSpec('wireColors', e.target.value.split(',').map(s => s.trim()))}
+                              placeholder="red, black, white..."
+                              className="min-h-20 font-mono text-sm"
+                            />
+                          </div>
+                        </div>
                       ) : (
-                        <p className="text-sm text-foreground">{parsedSpecs.wireLengths?.join(', ') || 'Not specified'}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Wire Gauges (AWG)</label>
-                      {isEditing ? (
-                        <Textarea
-                          value={parsedSpecs.wireGauges?.join(', ') || ''}
-                          onChange={(e) => updateParsedSpec('wireGauges', e.target.value.split(',').map(s => s.trim()))}
-                          placeholder="Separate gauges with commas"
-                          className="min-h-20"
-                        />
-                      ) : (
-                        <p className="text-sm text-foreground">{parsedSpecs.wireGauges?.join(', ') || 'Not specified'}</p>
+                        <div className="rounded-md border border-border overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/30">
+                                <TableHead className="w-[80px]">Wire #</TableHead>
+                                <TableHead>Length</TableHead>
+                                <TableHead>Gauge</TableHead>
+                                {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
+                                  <TableHead>Color</TableHead>
+                                )}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {Array.from({ length: Math.max(parsedSpecs.wireLengths?.length || 0, parsedSpecs.wireGauges?.length || 0) }).map((_, i) => (
+                                <TableRow key={i} className="hover:bg-muted/10">
+                                  <TableCell className="font-mono text-xs text-muted-foreground">#{i + 1}</TableCell>
+                                  <TableCell className="font-medium">{parsedSpecs.wireLengths?.[i] || "-"}</TableCell>
+                                  <TableCell>{parsedSpecs.wireGauges?.[i] || "-"}</TableCell>
+                                  {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
+                                    <TableCell>
+                                      {parsedSpecs.wireColors[i] ? (
+                                        <div className="flex items-center gap-2">
+                                          <div 
+                                            className="w-3 h-3 rounded-full border border-border shadow-sm"
+                                            style={{ backgroundColor: parsedSpecs.wireColors[i].toLowerCase() }}
+                                          />
+                                          <span className="capitalize text-sm">{parsedSpecs.wireColors[i]}</span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-muted-foreground">-</span>
+                                      )}
+                                    </TableCell>
+                                  )}
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
                       )}
                     </div>
 
@@ -667,7 +716,7 @@ const QuoteRequest = () => {
                   </div>
 
                   {/* Optional Specifications */}
-                  {(parsedSpecs.wireColors || parsedSpecs.insulationType || parsedSpecs.lengthTolerances) && (
+                  {(parsedSpecs.insulationType || parsedSpecs.lengthTolerances) && (
                     <div className="pt-6 border-t border-border space-y-4">
                       <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
                         <div className="w-2 h-2 bg-muted-foreground/50 rounded-full" />
@@ -675,12 +724,6 @@ const QuoteRequest = () => {
                       </h3>
                       
                       <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Wire Colors:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.wireColors.join(', ')}</p>
-                          </div>
-                        )}
                         {parsedSpecs.insulationType && (
                           <div>
                             <p className="font-medium text-foreground mb-1">Insulation Type:</p>
