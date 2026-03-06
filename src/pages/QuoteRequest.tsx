@@ -1,39 +1,27 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, CheckCircle, Upload, FileText, Clock, Package, Zap, ChevronDown, Shield, Edit2, AlertCircle } from "lucide-react";
+import { CheckCircle, Upload, FileText, Zap, Shield, ChevronRight, Scissors, Ruler, Download, RefreshCcw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 import { parseSchematicPDF, type ParsedSpecifications } from "@/lib/gemini";
+import NetlistDisplay from "@/components/NetlistDisplay";
 
 const QuoteRequest = () => {
-  const [step, setStep] = useState<"upload" | "processing" | "review" | "estimate" | "email" | "success">("upload");
+  const [step, setStep] = useState<"upload" | "processing" | "review" | "success">("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [email, setEmail] = useState("");
-  const [showOptional, setShowOptional] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
   const [parsedSpecs, setParsedSpecs] = useState<ParsedSpecifications | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [estimate, setEstimate] = useState({
-    productionTime: "12-15",
-    shippingTime: "3-5",
-    totalTime: "15-20",
-    complexity: "Medium",
-    confidence: "High"
-  });
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("Quote Request page visited at:", new Date().toISOString());
+    console.log("Wire Cut Tool visited at:", new Date().toISOString());
   }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
     if (uploadedFile) {
       if (!agreedToTerms) {
@@ -42,7 +30,6 @@ const QuoteRequest = () => {
           description: "Please agree to the Terms of Service and Privacy Policy before uploading.",
           variant: "destructive",
         });
-        // Reset the file input
         e.target.value = '';
         return;
       }
@@ -50,190 +37,66 @@ const QuoteRequest = () => {
       if (uploadedFile.type !== "application/pdf") {
         toast({
           title: "Invalid File Type",
-          description: "Please upload a PDF file.",
+          description: "Please upload a PDF schematic or wire list.",
           variant: "destructive",
         });
         return;
       }
       
       setFile(uploadedFile);
-      console.log("File uploaded:", uploadedFile.name);
-      
-      // Track PDF upload event
-      if (typeof window !== 'undefined' && (window as any).clarity) {
-        (window as any).clarity('event', 'pdf_uploaded');
-      }
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'pdf_uploaded', {
-          file_name: uploadedFile.name
-        });
-      }
-      
-      // Move to processing step
       setStep("processing");
       
-      // Parse PDF via secure backend edge function
-      parseSchematicPDF(uploadedFile)
-        .then((specs) => {
-          setParsedSpecs(specs);
-          setStep("review");
-          
-          // Track successful parsing
-          if (typeof window !== 'undefined' && (window as any).clarity) {
-            (window as any).clarity('event', 'pdf_parsed_success');
-          }
-          if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('event', 'pdf_parsed', {
-              confidence: specs.confidence,
-              wire_count: specs.wireCount
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("PDF parsing error:", error);
-          console.error("Error details:", JSON.stringify(error, null, 2));
-          console.error("Error stack:", error?.stack);
-          toast({
-            title: "Parsing Error",
-            description: error instanceof Error ? error.message : "Failed to parse schematic. Please try again or contact support.",
-            variant: "destructive",
-          });
-          setStep("upload");
-          setFile(null);
-          
-          // Track parsing failure
-          if (typeof window !== 'undefined' && (window as any).clarity) {
-            (window as any).clarity('event', 'pdf_parsed_error');
-          }
-        });
-    }
-  };
-
-  const handleSpecsConfirmed = () => {
-    if (!parsedSpecs) return;
-    
-    // Move to estimate with confirmed specs
-    setStep("processing");
-    
-    // Simulate generating estimate based on specs
-    setTimeout(() => {
-      // Generate estimate based on complexity
-      const wireCount = parseInt(parsedSpecs.wireCount) || 0;
-      
-      // Calculate total length in feet
-      let totalLengthFt = 0;
-      parsedSpecs.wireLengths?.forEach((lenStr) => {
-        const match = lenStr.match(/([\d.]+)\s*([a-zA-Z"']*)/);
-        if (match) {
-           const val = parseFloat(match[1]);
-           const unit = match[2].toLowerCase().replace('.', '');
-           if (unit === 'm' || unit === 'meters') totalLengthFt += val * 3.28084; // meters
-           else if (unit === 'cm') totalLengthFt += val * 0.0328084;
-           else if (unit === 'mm') totalLengthFt += val * 0.00328084;
-           else if (unit.startsWith('in') || unit === '"') totalLengthFt += val / 12;
-           else if (unit.startsWith('ft') || unit === "'") totalLengthFt += val;
-           else totalLengthFt += val / 12; // Default to inches if unknown
-        }
-      });
-      
-      const baseTime = Math.max(2, Math.ceil(wireCount / 10) + Math.ceil(totalLengthFt / 100));
-      
-      const mockEstimate = {
-        productionTime: `${baseTime}-${baseTime + 3}`,
-        shippingTime: "3-5",
-        totalTime: `${baseTime + 3}-${baseTime + 8}`,
-        complexity: wireCount > 20 || totalLengthFt > 500 ? "High" : wireCount > 10 ? "Medium" : "Low",
-        confidence: parsedSpecs.confidence === "high" ? "High" : parsedSpecs.confidence === "medium" ? "Medium" : "Low"
-      };
-      setEstimate(mockEstimate);
-      setStep("estimate");
-        
-        // Track estimate viewed event
-        if (typeof window !== 'undefined' && (window as any).clarity) {
-          (window as any).clarity('event', 'estimate_viewed');
-        }
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'estimate_viewed', {
-            production_time: mockEstimate.productionTime,
-            complexity: mockEstimate.complexity
-          });
-        }
-      }, 2000);
-  };
-
-  const updateParsedSpec = (field: keyof ParsedSpecifications, value: any) => {
-    if (!parsedSpecs) return;
-    setParsedSpecs({ ...parsedSpecs, [field]: value });
-  };
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !email.includes("@")) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log("Email submitted:", email, "at:", new Date().toISOString());
-    
-    // Save to Supabase
-    try {
-      const { error } = await supabase
-        .from('quote_requests' as any)
-        .insert({
-          email: email,
-          file_name: file?.name || null,
-          production_time: estimate.productionTime,
-          shipping_time: estimate.shippingTime,
-          total_time: estimate.totalTime,
-          complexity: estimate.complexity,
-          confidence: estimate.confidence
-        });
-
-      if (error) {
-        console.error('Error saving to Supabase:', error);
+      try {
+        // AI Processing
+        const specs = await parseSchematicPDF(uploadedFile);
+        setParsedSpecs(specs);
+        setStep("review");
         toast({
-          title: "Warning",
-          description: "Quote request saved locally, but there was an issue syncing to our database.",
-          variant: "default",
+            title: "Extraction Complete",
+            description: `Successfully identified ${specs.length} wire segments.`,
         });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Processing Failed",
+          description: error instanceof Error ? error.message : "Could not analyze the file. Please try again.",
+          variant: "destructive",
+        });
+        setStep("upload");
+        setFile(null);
       }
-    } catch (err) {
-      console.error('Unexpected error:', err);
     }
-    
-    // Track email submission event
-    if (typeof window !== 'undefined' && (window as any).clarity) {
-      (window as any).clarity('event', 'email_submitted');
-    }
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'generate_lead', {
-        value: 1
-      });
-    }
-    
+  };
+
+  const handleConfirm = () => {
+    // Here functionality would connect to a machine API or save to database
     setStep("success");
     toast({
-      title: "Success!",
-      description: "We'll send you detailed quote information shortly.",
+        title: "Sent to Production",
+        description: "Cut list has been queued for the cutting machine.",
     });
   };
 
+  const handleDownloadJSON = () => {
+      if (!parsedSpecs) return;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(parsedSpecs, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `cut-list-${file?.name.replace('.pdf', '')}.json`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <section className="pt-32 pb-24 px-6 relative">
-        <div className="technical-grid absolute inset-0 opacity-20" />
-        <div className="container mx-auto max-w-2xl relative z-10">
+      <section className="flex-grow pt-24 pb-16 px-4">
+        <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
             <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
@@ -242,10 +105,10 @@ const QuoteRequest = () => {
                 Instant Quote System
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 mb-4 tracking-tight">
               Get Your Production Timeline
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Upload your schematic and receive an instant production estimate
             </p>
           </motion.div>
@@ -261,7 +124,7 @@ const QuoteRequest = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-6"
               >
-                {/* Requirements Accordion */}
+                  {/* Requirements Accordion */}
                 <div className="industrial-card rounded-lg overflow-hidden">
                   <button
                     onClick={() => setShowOptional(!showOptional)}
@@ -445,73 +308,56 @@ const QuoteRequest = () => {
                   </AnimatePresence>
                 </div>
 
+
                 {/* Upload Section */}
-                <div className="industrial-card rounded-lg p-8">
+                <div className="industrial-card rounded-lg p-10 border-2 items-center border-dashed border-border hover:border-primary/50 transition-all bg-muted/5">
                   <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-primary/10 rounded-none flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-10 h-10 text-primary" />
-                    </div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">
-                      Upload Your Schematic
+                       Upload Schematic
                     </h2>
                     <p className="text-muted-foreground">
-                      PDF format • Max 10MB • Wire harness diagrams or CAD files
+                      Drag & drop your PDF file here
                     </p>
                   </div>
 
                   <label
                     htmlFor="file-upload"
-                    className="block w-full border-2 border-dashed border-border hover:border-primary transition-colors rounded-none p-12 cursor-pointer group"
+                    className="block w-full max-w-lg mx-auto cursor-pointer group"
                   >
-                    <input
-                      id="file-upload"
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <div className="text-center">
-                      <Upload className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors mx-auto mb-4" />
-                      <p className="text-foreground font-semibold mb-2">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        PDF files only
-                      </p>
+                    <div className="flex flex-col items-center justify-center p-12 bg-background border rounded-xl shadow-sm hover:shadow-md transition-all group-hover:border-primary">
+                        <Upload className="w-16 h-16 text-muted-foreground group-hover:text-primary transition-colors mb-4" />
+                        <span className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium group-hover:bg-primary/90 transition-colors">
+                            Select PDF File
+                        </span>
+                        <input
+                            id="file-upload"
+                            type="file"
+                            accept=".pdf"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                        />
                     </div>
                   </label>
 
-                  {/* Privacy & Security Banner */}
-                  <div className="mt-6 p-4 bg-muted/30 border border-border rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-semibold text-foreground mb-1">Your IP is Protected</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          All files are encrypted and confidential. We never share your intellectual property or data with third parties. Your designs remain exclusively yours.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Terms Agreement */}
-                  <div className="mt-6 flex items-start gap-3">
+                   {/* Terms Agreement */}
+                   <div className="mt-8 flex justify-center items-center gap-3">
                     <Checkbox 
                       id="terms-agreement"
                       checked={agreedToTerms}
                       onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
-                      className="mt-1"
                     />
-                    <label htmlFor="terms-agreement" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                    <label htmlFor="terms-agreement" className="text-sm text-muted-foreground cursor-pointer select-none">
                       I agree to the{" "}
-                      <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        Terms of Service
-                      </a>
-                      {" "}and{" "}
-                      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        Privacy Policy
-                      </a>
+                      <a href="/terms-of-service" className="text-primary hover:underline">Terms</a>
+                      {" "}&{" "}
+                      <a href="/privacy-policy" className="text-primary hover:underline">Privacy Policy</a>
                     </label>
+                  </div>
+
+                  {/* Security Note */}
+                  <div className="mt-6 flex justify-center items-center gap-2 text-xs text-muted-foreground/70">
+                      <Shield className="w-3 h-3" />
+                      <span>Files are processed securely and deleted after extraction.</span>
                   </div>
                 </div>
               </motion.div>
@@ -521,42 +367,38 @@ const QuoteRequest = () => {
             {step === "processing" && (
               <motion.div
                 key="processing"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.5 }}
-                className="industrial-card rounded-lg p-12 text-center"
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="industrial-card rounded-lg p-16 text-center shadow-lg"
               >
-                <div className="w-20 h-20 bg-primary rounded-none flex items-center justify-center mx-auto mb-6 animate-pulse">
-                  <Zap className="w-10 h-10 text-white" />
+                <div className="relative w-24 h-24 mx-auto mb-8">
+                    <div className="absolute inset-0 border-4 border-muted rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+                    <Zap className="absolute inset-0 m-auto w-10 h-10 text-primary animate-pulse" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  Analyzing Your Schematic with AI
+                
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Analyzing Schematic
                 </h2>
-                <p className="text-muted-foreground mb-8">
-                  Processing {file?.name}...
+                <p className="text-muted-foreground mb-8 text-lg">
+                  {file?.name}
                 </p>
                 
-                <div className="space-y-4 max-w-md mx-auto">
-                  {["Reading PDF document", "Extracting wire specifications", "Analyzing pinout mapping", "Generating timeline estimate"].map((task, index) => (
-                    <motion.div
-                      key={task}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.5, duration: 0.5 }}
-                      className="flex items-center gap-3 text-sm text-muted-foreground"
-                    >
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: index * 0.5 + 0.3 }}
-                        className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0"
-                      >
-                        <CheckCircle className="w-3 h-3 text-white" />
-                      </motion.div>
-                      <span>{task}</span>
-                    </motion.div>
-                  ))}
+                <div className="flex flex-col items-center gap-3 max-w-xs mx-auto">
+                    <div className="w-full flex items-center gap-3 text-sm text-muted-foreground">
+                        <CheckCircle className="w-4 h-4 text-primary" />
+                        <span>Reading PDF geometry</span>
+                    </div>
+                     <div className="w-full flex items-center gap-3 text-sm text-primary font-medium animate-pulse">
+                        <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin mb-0.5"></div>
+                        <span>Extracting wire segments</span>
+                    </div>
+                     <div className="w-full flex items-center gap-3 text-sm text-muted-foreground opacity-50">
+                        <div className="w-4 h-4 rounded-full border border-muted"></div>
+                        <span>Formatting cut list</span>
+                    </div>
                 </div>
               </motion.div>
             )}
@@ -571,363 +413,40 @@ const QuoteRequest = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-6"
               >
-                <div className="industrial-card rounded-lg p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-primary/10 rounded-none flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-foreground">
-                          Review Extracted Specifications
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          AI Confidence: <span className={`font-semibold ${parsedSpecs.confidence === 'high' ? 'text-green-600' : parsedSpecs.confidence === 'medium' ? 'text-yellow-600' : 'text-orange-600'}`}>{parsedSpecs.confidence.toUpperCase()}</span>
-                        </p>
-                      </div>
+                 <div className="flex justify-between items-end mb-2">
+                    <div>
+                        <h2 className="text-2xl font-bold text-foreground">Review Cut List</h2>
+                        <p className="text-muted-foreground">Verify the extracted lengths before processing.</p>
                     </div>
-                    <Button
-                      variant={isEditing ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setIsEditing(!isEditing)}
-                    >
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      {isEditing ? "Done Editing" : "Edit"}
+                    <Button variant="outline" size="sm" onClick={handleDownloadJSON}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Export JSON
                     </Button>
-                  </div>
+                 </div>
 
-                  {parsedSpecs.notes && (
-                    <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">AI Notes:</p>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">{parsedSpecs.notes}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Required Specifications */}
-                  <div className="space-y-4 mb-6">
-                    <h3 className="font-semibold text-foreground uppercase text-xs tracking-wider flex items-center gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full" />
-                      Required Specifications
-                    </h3>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Wire Count</label>
-                        {isEditing ? (
-                          <Input
-                            value={parsedSpecs.wireCount}
-                            onChange={(e) => updateParsedSpec('wireCount', e.target.value)}
-                            className="h-10"
-                          />
-                        ) : (
-                          <p className="text-lg font-semibold text-foreground">{parsedSpecs.wireCount}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">Total Quantity</label>
-                        {isEditing ? (
-                          <Input
-                            value={parsedSpecs.totalQuantity}
-                            onChange={(e) => updateParsedSpec('totalQuantity', e.target.value)}
-                            className="h-10"
-                          />
-                        ) : (
-                          <p className="text-lg font-semibold text-foreground">{parsedSpecs.totalQuantity}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-sm font-medium text-foreground">Wire Specifications</h3>
-                      
-                      {isEditing ? (
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-xs text-muted-foreground">Lengths</label>
-                            <Textarea
-                              value={parsedSpecs.wireLengths?.join(', ') || ''}
-                              onChange={(e) => updateParsedSpec('wireLengths', e.target.value.split(',').map(s => s.trim()))}
-                              placeholder="Separate lengths with commas"
-                              className="min-h-24 font-mono text-sm"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-xs text-muted-foreground">Gauges (AWG)</label>
-                            <Textarea
-                              value={parsedSpecs.wireGauges?.join(', ') || ''}
-                              onChange={(e) => updateParsedSpec('wireGauges', e.target.value.split(',').map(s => s.trim()))}
-                              placeholder="Separate gauges with commas"
-                              className="min-h-24 font-mono text-sm"
-                            />
-                          </div>
-                          {/* Allow editing colors if they exist or if user wants to add them */}
-                          <div className="space-y-2 col-span-2">
-                            <label className="text-xs text-muted-foreground">Wire Colors (Optional)</label>
-                            <Textarea
-                              value={parsedSpecs.wireColors?.join(', ') || ''}
-                              onChange={(e) => updateParsedSpec('wireColors', e.target.value.split(',').map(s => s.trim()))}
-                              placeholder="red, black, white..."
-                              className="min-h-20 font-mono text-sm"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-md border border-border overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="bg-muted/30">
-                                <TableHead className="w-[80px]">Wire #</TableHead>
-                                <TableHead>Length</TableHead>
-                                <TableHead>Gauge</TableHead>
-                                {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
-                                  <TableHead>Color</TableHead>
-                                )}
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Array.from({ length: Math.max(parsedSpecs.wireLengths?.length || 0, parsedSpecs.wireGauges?.length || 0) }).map((_, i) => (
-                                <TableRow key={i} className="hover:bg-muted/10">
-                                  <TableCell className="font-mono text-xs text-muted-foreground">#{i + 1}</TableCell>
-                                  <TableCell className="font-medium">{parsedSpecs.wireLengths?.[i] || "-"}</TableCell>
-                                  <TableCell>{parsedSpecs.wireGauges?.[i] || "-"}</TableCell>
-                                  {parsedSpecs.wireColors && parsedSpecs.wireColors.length > 0 && (
-                                    <TableCell>
-                                      {parsedSpecs.wireColors[i] ? (
-                                        <div className="flex items-center gap-2">
-                                          <div 
-                                            className="w-3 h-3 rounded-full border border-border shadow-sm"
-                                            style={{ backgroundColor: parsedSpecs.wireColors[i].toLowerCase() }}
-                                          />
-                                          <span className="capitalize text-sm">{parsedSpecs.wireColors[i]}</span>
-                                        </div>
-                                      ) : (
-                                        <span className="text-muted-foreground">-</span>
-                                      )}
-                                    </TableCell>
-                                  )}
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Pinout Mapping</label>
-                      {isEditing ? (
-                        <Textarea
-                          value={parsedSpecs.pinoutMapping}
-                          onChange={(e) => updateParsedSpec('pinoutMapping', e.target.value)}
-                          placeholder="Describe wire to pin connections"
-                          className="min-h-24"
-                        />
-                      ) : (
-                        <p className="text-sm text-foreground whitespace-pre-wrap">{parsedSpecs.pinoutMapping}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Optional Specifications */}
-                  {(parsedSpecs.insulationType || parsedSpecs.lengthTolerances) && (
-                    <div className="pt-6 border-t border-border space-y-4">
-                      <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
-                        <div className="w-2 h-2 bg-muted-foreground/50 rounded-full" />
-                        Optional Specifications Found
-                      </h3>
-                      
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        {parsedSpecs.insulationType && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Insulation Type:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.insulationType}</p>
-                          </div>
-                        )}
-                        {parsedSpecs.lengthTolerances && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Length Tolerances:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.lengthTolerances}</p>
-                          </div>
-                        )}
-                        {parsedSpecs.bundlingSpecs && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Bundling:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.bundlingSpecs}</p>
-                          </div>
-                        )}
-                        {parsedSpecs.environmentalReqs && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Environmental:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.environmentalReqs}</p>
-                          </div>
-                        )}
-                        {parsedSpecs.shielding && (
-                          <div>
-                            <p className="font-medium text-foreground mb-1">Shielding:</p>
-                            <p className="text-muted-foreground">{parsedSpecs.shielding}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <NetlistDisplay specs={parsedSpecs} />
 
                 {/* Action Buttons */}
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center pt-4">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => {
                       setStep("upload");
                       setFile(null);
                       setParsedSpecs(null);
                     }}
+                    className="text-muted-foreground hover:text-foreground"
                   >
-                    ← Upload Different File
+                    Cancel & Upload New
                   </Button>
                   <Button
                     size="lg"
-                    onClick={handleSpecsConfirmed}
-                    className="px-8"
+                    onClick={handleConfirm}
+                    className="px-8 shadow-lg shadow-primary/20"
                   >
-                    Confirm & Generate Quote
-                    <CheckCircle className="w-5 h-5 ml-2" />
+                    Confirm & Send to Machine
+                    <ChevronRight className="w-5 h-5 ml-2" />
                   </Button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 4: Estimate Results */}
-            {step === "estimate" && (
-              <motion.div
-                key="estimate"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6"
-              >
-                <div className="industrial-card rounded-lg p-8">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-primary rounded-none flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground">
-                        Estimate Ready!
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Based on your schematic: {file?.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Timeline Cards */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-6">
-                    <div className="industrial-card rounded-lg p-6 text-center">
-                      <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {estimate.productionTime}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Production Days
-                      </div>
-                    </div>
-
-                    <div className="industrial-card rounded-lg p-6 text-center">
-                      <Package className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {estimate.shippingTime}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Shipping Days
-                      </div>
-                    </div>
-
-                    <div className="industrial-card rounded-lg p-6 text-center">
-                      <Zap className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {estimate.totalTime}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Total Days
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="grid md:grid-cols-2 gap-4 pt-6 border-t border-border">
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">Complexity</div>
-                      <div className="text-lg font-semibold text-foreground">{estimate.complexity}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">Estimate Confidence</div>
-                      <div className="text-lg font-semibold text-foreground">{estimate.confidence}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Collection */}
-                <div className="industrial-card rounded-lg p-8">
-                  <h3 className="text-xl font-bold text-foreground mb-4">
-                    Get Detailed Quote
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    Enter your email to receive a complete breakdown with pricing, specifications, and next steps.
-                  </p>
-                  
-                  <form onSubmit={handleEmailSubmit} className="space-y-4">
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-12 text-base"
-                        required
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full h-12 text-base font-semibold"
-                      size="lg"
-                    >
-                      Send Detailed Quote
-                    </Button>
-                  </form>
-
-                  <div className="mt-4 p-3 bg-muted/20 border border-border rounded">
-                    <p className="text-xs text-muted-foreground text-center">
-                      <Shield className="w-3 h-3 inline mr-1" />
-                      Your information is secure and confidential. We never share your data or intellectual property.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-center flex-col md:flex-row gap-4 mt-8 items-center">
-                  <button
-                    onClick={() => setStep("review")}
-                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-                  >
-                    ← Back to Details
-                  </button>
-                  <span className="hidden md:inline text-muted-foreground">•</span>
-                  <button
-                    onClick={() => {
-                      setFile(null);
-                      setParsedSpecs(null);
-                      setStep("upload");
-                    }}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Upload Different File
-                  </button>
                 </div>
               </motion.div>
             )}
@@ -940,66 +459,54 @@ const QuoteRequest = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.5 }}
-                className="industrial-card rounded-lg p-12 text-center relative"
+                className="industrial-card rounded-lg p-12 text-center relative border-green-500/20 bg-green-500/5"
               >
-                <div className="absolute top-4 right-4 pulse-dot" />
-                <div className="w-16 h-16 bg-primary rounded-none flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-8 h-8 text-white" />
+                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-500/20">
+                  <CheckCircle className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-3">
-                  Quote Sent!
+                <h2 className="text-3xl font-bold text-foreground mb-4">
+                  Sent to Production
                 </h2>
-                <p className="text-muted-foreground mb-6">
-                  We've sent a detailed quote to:
-                </p>
-                <p className="text-lg font-semibold text-primary mb-8">
-                  {email}
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Check your inbox in the next few minutes. The email includes your estimated timeline, pricing breakdown, and next steps.
-                </p>
-                
-                <div className="pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Your Estimate Summary:
-                  </p>
-                  <div className="flex justify-center gap-8 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">{estimate.totalTime}</div>
-                      <div className="text-xs text-muted-foreground">Days Total</div>
+                <div className="text-muted-foreground mb-8 max-w-md mx-auto">
+                    <p className="mb-4">The cut list has been successfully verified and queued for the wire processing machine.</p> 
+                    <div className="bg-background rounded-lg p-4 border text-left text-sm font-mono">
+                        <div className="flex justify-between mb-2">
+                            <span className="text-muted-foreground">File:</span>
+                            <span>{file?.name}</span>
+                        </div>
+                        <div className="flex justify-between mb-2">
+                            <span className="text-muted-foreground">Wires:</span>
+                            <span>{parsedSpecs?.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Status:</span>
+                            <span className="text-green-600 font-bold">QUEUED</span>
+                        </div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-foreground">{estimate.complexity}</div>
-                      <div className="text-xs text-muted-foreground">Complexity</div>
-                    </div>
-                  </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setFile(null);
-                    setEmail("");
-                    setStep("upload");
-                  }}
-                  className="mt-8 text-sm text-primary hover:underline"
-                >
-                  Get another quote
-                </button>
+                <div className="flex justify-center gap-4">
+                     <Button
+                        variant="outline"
+                        onClick={handleDownloadJSON}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download JSON
+                      </Button>
+                    <Button
+                      onClick={() => {
+                        setFile(null);
+                        setParsedSpecs(null);
+                        setStep("upload");
+                      }}
+                    >
+                      Process Another File
+                      <RefreshCcw className="w-4 h-4 ml-2" />
+                    </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          <div className="mt-12 text-center">
-            <p className="text-muted-foreground mb-4">
-              Have questions? Contact us directly:
-            </p>
-            <a 
-              href="mailto:outreach@sonicwire.ca"
-              className="text-primary hover:underline font-semibold"
-            >
-              outreach@sonicwire.ca
-            </a>
-          </div>
         </div>
       </section>
       <Footer />

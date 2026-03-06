@@ -8,27 +8,14 @@ if (!apiKey) {
 
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-export interface ParsedSpecifications {
-  wireCount: string;
-  wireLengths: string[];
-  wireGauges: string[];
-  pinoutMapping: string;
-  totalQuantity: string;
-  // Optional fields
-  wireColors?: string[];
-  insulationType?: string;
-  lengthTolerances?: string;
-  bundlingSpecs?: string;
-  routingPaths?: string;
-  environmentalReqs?: string;
-  shielding?: string;
-  sleeving?: string;
-  separationReqs?: string;
-  labels?: string;
-  // Metadata
-  confidence: "high" | "medium" | "low";
-  notes?: string;
+export interface WireCut {
+  id: string;      
+  length: string;  
+  gauge: string;   
+  color: string;   
 }
+
+export type ParsedSpecifications = WireCut[];
 
 export async function parseSchematicPDF(file: File): Promise<ParsedSpecifications> {
   if (!ai) {
@@ -44,51 +31,29 @@ export async function parseSchematicPDF(file: File): Promise<ParsedSpecification
       )
     );
 
-    const prompt = `You are an expert at analyzing wire harness schematics and technical drawings.
+    const prompt = `You are a precision data extraction tool for an automated wire harnessing system. I will provide images or PDFs of wire harness schematics.
 
-Analyze this PDF schematic and extract the following wire harness specifications in JSON format:
+Your task is to parse the document and extract the point-to-point wiring netlist into a strictly formatted JSON array.
 
-REQUIRED FIELDS (must be present):
-1. wireCount: Total number of individual wires (as string)
-2. wireLengths: Array of wire lengths with units (e.g., ["150mm", "200mm"])
-3. wireGauges: Array of wire gauges (e.g., ["18AWG", "22AWG"])
-4. pinoutMapping: Description of which wires connect to which pins/points
-5. totalQuantity: Number of identical harnesses needed (default to "1" if not specified)
+Strict Rules:
+1. Ignore spatial layout.
+2. Extract ID, Length, Gauge, Color.
+3. Use "null" for missing values.
+4. Return ONLY raw JSON array. No markdown.
 
-OPTIONAL FIELDS (extract if present):
-6. wireColors: Array of wire colors if specified
-7. insulationType: Type of wire insulation (PVC, PTFE, silicone, etc.)
-8. lengthTolerances: Acceptable length variance (e.g., "±5mm")
-9. bundlingSpecs: How wires should be grouped or bundled
-10. routingPaths: Specific routing requirements or bend specifications
-11. environmentalReqs: Operating temperature range, moisture resistance, etc.
-12. shielding: EMI shielding requirements if any
-13. sleeving: Protective sleeving specifications
-14. separationReqs: Wires that must be routed separately
-15. labels: Wire identification labels or markers
-
-METADATA:
-- confidence: "high", "medium", or "low" based on how clear the specifications are
-- notes: Any important observations, warnings, or unclear specifications
-
-Return ONLY valid JSON. If information is not found, use empty string "" for strings or empty array [] for arrays.
-Do not include any markdown formatting or code blocks, just the raw JSON object.
-
-Example response format:
-{
-  "wireCount": "4",
-  "wireLengths": ["150mm", "200mm", "175mm", "150mm"],
-  "wireGauges": ["18AWG", "18AWG", "22AWG", "18AWG"],
-  "pinoutMapping": "Wire 1 (red): Pin A1 to Pin B1, Wire 2 (black): Pin A2 to Pin B2",
-  "totalQuantity": "10",
-  "wireColors": ["red", "black", "white", "green"],
-  "confidence": "high",
-  "notes": "All specifications clearly marked"
-}`;
+Expected JSON Structure:
+[
+  { 
+    "id": "W1", 
+    "length": "200mm", 
+    "gauge": "18AWG", 
+    "color": "RED" 
+  }
+]`;
 
     console.log("Sending request to Gemini model...");
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [
         {
           role: "user",
@@ -109,26 +74,36 @@ Example response format:
     });
 
     console.log("Received response from Gemini");
-    const text = response.text;
+    // Ensure we handle response.text property correctly
+    const text = response.text || "";
     console.log("Raw response text:", text);
     
     // Clean up the response - remove markdown code blocks if present
-    let jsonText = text?.trim() || "{}";
+    let jsonText = text.trim() || "[]";
     if (jsonText.startsWith("```json")) {
-      jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+      jsonText = jsonText.replace(/^```json\s*/, "").replace(/\s*```$/, "");
     } else if (jsonText.startsWith("```")) {
-      jsonText = jsonText.replace(/```\n?/g, "");
+      jsonText = jsonText.replace(/^```\s*/, "").replace(/\s*```$/, "");
     }
     
-    const parsed = JSON.parse(jsonText) as ParsedSpecifications;
-    
-    // Validate required fields
-    if (!parsed.wireCount || !parsed.wireLengths || !parsed.wireGauges || !parsed.pinoutMapping || !parsed.totalQuantity) {
-      throw new Error("Missing required specifications in parsed data");
+    // Attempt parsing
+    try {
+        const parsed = JSON.parse(jsonText);
+        if (Array.isArray(parsed)) {
+            return parsed as ParsedSpecifications;
+        }
+        // Handle edge case where it returns an object wrapper
+        // @ts-ignore
+        if (parsed.wires && Array.isArray(parsed.wires)) return parsed.wires;
+        throw new Error("Parsed data is not a valid list of wire cuts");
+    } catch (e) {
+        console.error("JSON Parse Error:", e);
+        throw new Error("Failed to parse AI response as JSON");
     }
-    
-    return parsed;
+
   } catch (error) {
+
+
     console.error("Error parsing PDF:", error);
     throw new Error(
       error instanceof Error 
