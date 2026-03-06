@@ -3,11 +3,38 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Upload, FileText, Zap, Shield, ChevronRight, Scissors, Ruler, Download, RefreshCcw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { parseSchematicPDF, type ParsedSpecifications } from "@/lib/gemini";
+import { parseSchematicPDF, type ParsedSpecifications, type WireCut } from "@/lib/gemini";
 import NetlistDisplay from "@/components/NetlistDisplay";
+
+// Pricing Constants
+const BASE_FEE = 29.99;      // Reduced setup fee
+const PRICE_PER_CM = 0.15;   // Competitive pricing per cm (covers material & processing)
+
+const parseLengthToCm = (lengthStr: string): number => {
+  if (!lengthStr || lengthStr === "null") return 0;
+  // Remove whitespace and convert to lowercase
+  const cleanStr = lengthStr.toLowerCase().replace(/[\s,]/g, '');
+  
+  // Match number and optional unit
+  const match = cleanStr.match(/(\d+(?:\.\d+)?)([a-z]+|")?/);
+  if (!match) return 0;
+  
+  const val = parseFloat(match[1]);
+  const unit = match[2];
+  
+  switch(unit) {
+      case 'm': return val * 100;
+      case 'mm': return val / 10;
+      case 'in': case '"': return val * 2.54;
+      case 'ft': case "'": return val * 30.48;
+      default: return val; // assume cm if no unit, or update logic if default was mm
+  }
+};
 
 const QuoteRequest = () => {
   const [step, setStep] = useState<"upload" | "processing" | "review" | "success">("upload");
@@ -15,11 +42,31 @@ const QuoteRequest = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
   const [parsedSpecs, setParsedSpecs] = useState<ParsedSpecifications | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
   const { toast } = useToast();
+
+  const totalLengthCm = parsedSpecs?.wires ? parsedSpecs.wires.reduce((acc, w) => acc + (parseLengthToCm(w.length) || 0), 0) : 0;
+  
+  const totalCost = parsedSpecs?.wires ? (
+    BASE_FEE + (totalLengthCm * PRICE_PER_CM * quantity)
+  ) : 0;
 
   useEffect(() => {
     console.log("Wire Cut Tool visited at:", new Date().toISOString());
   }, []);
+
+  const handleWireUpdate = (index: number, field: keyof WireCut, value: string) => {
+    if (!parsedSpecs) return;
+    const newWires = [...parsedSpecs.wires];
+    newWires[index] = { ...newWires[index], [field]: value };
+    setParsedSpecs({ ...parsedSpecs, wires: newWires });
+  };
+
+  const handleAddWire = () => {
+    if (!parsedSpecs) return;
+    const newWire: WireCut = { id: "", length: "", gauge: "", color: "" };
+    setParsedSpecs({ ...parsedSpecs, wires: [...parsedSpecs.wires, newWire] });
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -53,7 +100,7 @@ const QuoteRequest = () => {
         setStep("review");
         toast({
             title: "Extraction Complete",
-            description: `Successfully identified ${specs.length} wire segments.`,
+            description: `Successfully identified ${specs.wires.length} wire segments.`,
         });
       } catch (error) {
         console.error(error);
@@ -72,14 +119,15 @@ const QuoteRequest = () => {
     // Here functionality would connect to a machine API or save to database
     setStep("success");
     toast({
-        title: "Sent to Production",
-        description: "Cut list has been queued for the cutting machine.",
+        title: "Order Submitted",
+        description: "Your wiring order has been confirmed successfully.",
     });
   };
 
   const handleDownloadJSON = () => {
       if (!parsedSpecs) return;
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(parsedSpecs, null, 2));
+      const data = parsedSpecs.wires || [];
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
       downloadAnchorNode.setAttribute("download", `cut-list-${file?.name.replace('.pdf', '')}.json`);
@@ -424,7 +472,59 @@ const QuoteRequest = () => {
                     </Button>
                  </div>
 
-                <NetlistDisplay specs={parsedSpecs} />
+                <NetlistDisplay specs={parsedSpecs} onUpdateWire={handleWireUpdate} onAddWire={handleAddWire} />
+
+                {/* Pricing Breakdown */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-muted p-4 rounded-lg flex flex-col justify-center space-y-2 border border-border">
+                     <label className="text-sm font-semibold text-foreground">Harness Quantity</label>
+                     <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        >
+                          -
+                        </Button>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={quantity}
+                          onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="h-8 w-20 text-center bg-background"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setQuantity(quantity + 1)}
+                        >
+                          +
+                        </Button>
+                     </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg flex justify-between items-center text-sm md:text-base border border-border">
+                    <div className="space-y-1">
+                      <p className="font-semibold text-foreground">Estimate Breakdown:</p>
+                      <p className="text-muted-foreground text-xs">
+                         Includes ${BASE_FEE} setup fee + ${(totalLengthCm * PRICE_PER_CM * quantity).toFixed(2)} (material & labor)
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-foreground">
+                        ${totalCost.toFixed(2)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                         Length: {(totalLengthCm).toFixed(0)}cm / unit
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {quantity} × ${(totalLengthCm * PRICE_PER_CM).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center pt-4">
@@ -442,9 +542,9 @@ const QuoteRequest = () => {
                   <Button
                     size="lg"
                     onClick={handleConfirm}
-                    className="px-8 shadow-lg shadow-primary/20"
+                    className="px-8 shadow-lg shadow-primary/20 bg-green-600 hover:bg-green-700 text-white"
                   >
-                    Confirm & Send to Machine
+                    Submit Order
                     <ChevronRight className="w-5 h-5 ml-2" />
                   </Button>
                 </div>
@@ -465,22 +565,34 @@ const QuoteRequest = () => {
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold text-foreground mb-4">
-                  Sent to Production
+                  Order Confirmed
                 </h2>
                 <div className="text-muted-foreground mb-8 max-w-md mx-auto">
-                    <p className="mb-4">The cut list has been successfully verified and queued for the wire processing machine.</p> 
-                    <div className="bg-background rounded-lg p-4 border text-left text-sm font-mono">
-                        <div className="flex justify-between mb-2">
+                    <p className="mb-4">Your wire order has been successfully placed. A confirmation email has been sent.</p> 
+                    <div className="bg-background rounded-lg p-4 border text-left text-sm font-mono space-y-2">
+                        <div className="flex justify-between border-b border-muted pb-2">
+                            <span className="text-muted-foreground">Order ID:</span>
+                            <span>ORD-{Math.floor(Math.random() * 10000)}</span>
+                        </div>
+                        <div className="flex justify-between">
                             <span className="text-muted-foreground">File:</span>
                             <span>{file?.name}</span>
                         </div>
-                        <div className="flex justify-between mb-2">
-                            <span className="text-muted-foreground">Wires:</span>
-                            <span>{parsedSpecs?.length}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Quantity:</span>
+                            <span>{quantity} Harness{quantity > 1 ? 'es' : ''}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Status:</span>
-                            <span className="text-green-600 font-bold">QUEUED</span>
+                            <span className="text-muted-foreground">Wires per harness:</span>
+                            <span>{parsedSpecs?.wires.length}</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">Length per harness:</span>
+                             <span>~{totalLengthCm.toFixed(1)} cm</span>
+                        </div>
+                         <div className="flex justify-between pt-2 border-t border-muted mt-2 font-bold text-lg">
+                            <span className="text-foreground">Total Price:</span>
+                            <span className="text-green-600">${totalCost.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
