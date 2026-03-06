@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { parseSchematicPDF, type ParsedSpecifications, type WireCut } from "@/lib/gemini";
 import NetlistDisplay from "@/components/NetlistDisplay";
+import { supabase } from "@/integrations/supabase/client";
 
 // Pricing Constants
 const BASE_FEE = 29.99;      // Reduced setup fee
@@ -43,6 +44,7 @@ const QuoteRequest = () => {
   const [showOptional, setShowOptional] = useState(false);
   const [parsedSpecs, setParsedSpecs] = useState<ParsedSpecifications | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
+  const [storagePath, setStoragePath] = useState<string | null>(null); // New state to hold file path
   const { toast } = useToast();
 
   const totalLengthCm = parsedSpecs?.wires ? parsedSpecs.wires.reduce((acc, w) => acc + (parseLengthToCm(w.length) || 0), 0) : 0;
@@ -94,6 +96,40 @@ const QuoteRequest = () => {
       setStep("processing");
       
       try {
+        // Upload to Supabase Storage immediately
+        const fileExt = uploadedFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+            .from('schematics')
+            .upload(fileName, uploadedFile);
+
+        if (uploadError) {
+             console.error('Storage upload failed:', uploadError.message);
+             toast({
+                 title: "Storage Warning",
+                 description: "The file could not be saved to our secure storage. You can still proceed with the quote.",
+                 variant: "destructive"
+             });
+        } else {
+             console.log('File uploaded to storage:', fileName);
+             setStoragePath(fileName);
+             
+             // Record in DB
+             const { error: dbError } = await (supabase.from as any)('schematic_uploads').insert({
+                 file_path: fileName,
+                 file_name: uploadedFile.name,
+                 file_size: uploadedFile.size,
+                 content_type: uploadedFile.type
+             });
+
+             if (dbError) {
+                console.error('DB tracking failed:', dbError.message);
+             } else {
+                console.log('DB tracking successful for:', fileName);
+             }
+        }
+
         // AI Processing
         const specs = await parseSchematicPDF(uploadedFile);
         setParsedSpecs(specs);
@@ -115,13 +151,39 @@ const QuoteRequest = () => {
     }
   };
 
-  const handleConfirm = () => {
-    // Here functionality would connect to a machine API or save to database
-    setStep("success");
-    toast({
-        title: "Order Submitted",
-        description: "Your wiring order has been confirmed successfully.",
-    });
+  const handleConfirm = async () => {
+    try {
+        const orderData = {
+            total_price: totalCost,
+            currency: 'USD',
+            quantity: quantity,
+            total_length_cm: totalLengthCm,
+            wire_count: parsedSpecs?.wires.length || 0,
+            file_name: file?.name,
+            storage_path: storagePath,
+            wire_data: parsedSpecs?.wires || [],
+            status: 'submitted'
+        };
+
+        const { error, data } = await (supabase.from as any)('orders').insert(orderData); // Removed .select() to avoid RLS read error
+
+        if (error) throw error;
+        
+        console.log('Order created successfully');
+
+        setStep("success");
+        toast({
+            title: "Order Submitted",
+            description: "Your wiring order has been confirmed successfully.",
+        });
+    } catch (error) {
+        console.error('Order submission failed:', error);
+        toast({
+            title: "Submission Error",
+            description: "Could not save your order. Please try again.",
+            variant: "destructive"
+        });
+    }
   };
 
   const handleDownloadJSON = () => {
