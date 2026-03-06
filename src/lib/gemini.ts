@@ -15,7 +15,13 @@ export interface WireCut {
   color: string;   
 }
 
-export type ParsedSpecifications = WireCut[];
+export type WireList = WireCut[];
+
+export interface ParsedSpecifications {
+  wires: WireCut[];
+  missingInfo: string[];
+  isSchematic: boolean;
+}
 
 export async function parseSchematicPDF(file: File): Promise<ParsedSpecifications> {
   if (!ai) {
@@ -31,25 +37,32 @@ export async function parseSchematicPDF(file: File): Promise<ParsedSpecification
       )
     );
 
-    const prompt = `You are a precision data extraction tool for an automated wire harnessing system. I will provide images or PDFs of wire harness schematics.
+    const prompt = `You are a precision data extraction tool for an automated wire harnessing system. I will provide images or PDFs of schematics.
 
-Your task is to parse the document and extract the point-to-point wiring netlist into a strictly formatted JSON array.
+Your task is to:
+1. Determine if the document is likely a wire harness schematic or wire list (isSchematic: boolean). If not, return isSchematic=false and empty wires.
+2. If it is a schematic, extract the point-to-point wiring netlist.
+3. Identify any REQUIRED columns that are completely missing (e.g. if no gauge is listed at all).
 
 Strict Rules:
 1. Ignore spatial layout.
 2. Extract ID, Length, Gauge, Color.
-3. Use "null" for missing values.
-4. Return ONLY raw JSON array. No markdown.
+3. Use "null" for missing values in wire rows.
+4. Return ONLY raw JSON. No markdown.
 
 Expected JSON Structure:
-[
-  { 
-    "id": "W1", 
-    "length": "200mm", 
-    "gauge": "18AWG", 
-    "color": "RED" 
-  }
-]`;
+{
+  "isSchematic": true,
+  "missingInfo": ["color", "gauge"], // List any columns that are ENTIRELY missing from the doc
+  "wires": [
+    { 
+      "id": "W1", 
+      "length": "200mm", 
+      "gauge": "18AWG", 
+      "color": "RED" 
+    }
+  ]
+}`;
 
     console.log("Sending request to Gemini model...");
     const response = await ai.models.generateContent({
@@ -74,28 +87,27 @@ Expected JSON Structure:
     });
 
     console.log("Received response from Gemini");
-    // Ensure we handle response.text property correctly
     const text = response.text || "";
     console.log("Raw response text:", text);
     
-    // Clean up the response - remove markdown code blocks if present
-    let jsonText = text.trim() || "[]";
+    let jsonText = text.trim() || "{}";
     if (jsonText.startsWith("```json")) {
       jsonText = jsonText.replace(/^```json\s*/, "").replace(/\s*```$/, "");
     } else if (jsonText.startsWith("```")) {
       jsonText = jsonText.replace(/^```\s*/, "").replace(/\s*```$/, "");
     }
     
-    // Attempt parsing
     try {
         const parsed = JSON.parse(jsonText);
-        if (Array.isArray(parsed)) {
-            return parsed as ParsedSpecifications;
-        }
-        // Handle edge case where it returns an object wrapper
-        // @ts-ignore
-        if (parsed.wires && Array.isArray(parsed.wires)) return parsed.wires;
-        throw new Error("Parsed data is not a valid list of wire cuts");
+        
+        // Normalize output
+        const result: ParsedSpecifications = {
+          isSchematic: typeof parsed.isSchematic === 'boolean' ? parsed.isSchematic : true,
+          missingInfo: Array.isArray(parsed.missingInfo) ? parsed.missingInfo : [],
+          wires: Array.isArray(parsed.wires) ? parsed.wires : (Array.isArray(parsed) ? parsed : [])
+        };
+        
+        return result;
     } catch (e) {
         console.error("JSON Parse Error:", e);
         throw new Error("Failed to parse AI response as JSON");
