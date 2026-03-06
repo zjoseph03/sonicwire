@@ -30,7 +30,7 @@ const Navbar = () => {
           onClick={handleQuoteClick}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="btn-primary"
+          className="font-semibold bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
         >
           Get Quote
         </motion.a>

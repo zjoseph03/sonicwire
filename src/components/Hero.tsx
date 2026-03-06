@@ -1,4 +1,4 @@
-import { ArrowRight, Zap, Clock, Shield } from "lucide-react";
+import { ArrowRight, Zap, Clock, Shield, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Hero = () => {
