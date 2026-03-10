@@ -135,6 +135,22 @@ const QuoteRequest = () => {
         
         // Save for demo/admin usage
         localStorage.setItem('lastHarnessSpecs', JSON.stringify(specs));
+
+         // Save file for admin view (Limit to 4MB to avoid quota issues)
+         if (uploadedFile.size < 4 * 1024 * 1024) { 
+             const reader = new FileReader();
+             reader.onload = (e) => {
+                 if (e.target?.result) {
+                    localStorage.setItem('lastHarnessFileData', e.target.result as string);
+                    localStorage.setItem('lastHarnessFileName', uploadedFile.name);
+                    localStorage.setItem('lastHarnessFileType', uploadedFile.type);
+                 }
+             };
+             reader.readAsDataURL(uploadedFile);
+        } else {
+             console.warn("File too large to persist for demo view");
+             localStorage.removeItem('lastHarnessFileData');
+        }
         
         setParsedSpecs(specs);
         setStep("review");
