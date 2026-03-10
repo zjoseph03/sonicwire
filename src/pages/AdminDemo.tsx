@@ -18,6 +18,7 @@ interface SerialPort {
     open(options: { baudRate: number }): Promise<void>;
     close(): Promise<void>;
     writable: WritableStream;
+    readable: ReadableStream;
 }
 
 const AdminDemo = () => {
@@ -130,30 +131,49 @@ const AdminDemo = () => {
         setIsPrinting(true);
         addLog("Starting print job from preview...");
 
-        // Use the edited G-Code from the preview window
-        const commands = gcodePreview.split('\n').filter(line => line.trim() !== '');
         const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+        
         const writer = port.writable.getWriter();
+        const reader = port.readable.getReader();
 
         try {
-            for (const cmd of commands) {
-                // Keep comments that might be manually added or important
-                const trimmed = cmd.trim();
+            const commands = gcodePreview.split(/\r?\n/);
+            let buffer = '';
+
+            for (const line of commands) {
+                const cmd = line.trim();
                 
-                // Still skip empty lines or pure whitespace if any slipped through
-                if (!trimmed) continue;
+                // Ignore empty lines and comments
+                if (!cmd || cmd.startsWith(';')) {
+                    continue;
+                }
                 
-                addLog(`> ${trimmed}`);
-                await writer.write(encoder.encode(trimmed + '\n'));
+                addLog(`> ${cmd}`);
+                await writer.write(encoder.encode(cmd + '\n'));
                 
-                // Slow pacing as requested (2 seconds per command) to prevent buffer overflows/skips
-                await new Promise(r => setTimeout(r, 2000));
+                // Wait for 'ok'
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+                    
+                    // Check for "ok" (case-insensitive usually, but standard is "ok")
+                    if (buffer.toLowerCase().includes('ok')) {
+                        buffer = '';
+                        break;
+                    }
+                }
             }
             addLog("Job sent successfully.");
         } catch (err) {
+            console.error(err);
             addLog(`Transmission Error: ${String(err)}`);
         } finally {
             writer.releaseLock();
+            reader.releaseLock();
             setIsPrinting(false);
         }
     };
