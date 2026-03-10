@@ -146,8 +146,8 @@ const AdminDemo = () => {
                 addLog(`> ${trimmed}`);
                 await writer.write(encoder.encode(trimmed + '\n'));
                 
-                // Slight delay for buffer management (simple flow control)
-                await new Promise(r => setTimeout(r, 100));
+                // Slow pacing as requested (2 seconds per command) to prevent buffer overflows/skips
+                await new Promise(r => setTimeout(r, 2000));
             }
             addLog("Job sent successfully.");
         } catch (err) {
