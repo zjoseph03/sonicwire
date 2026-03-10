@@ -132,6 +132,10 @@ const QuoteRequest = () => {
 
         // AI Processing
         const specs = await parseSchematicPDF(uploadedFile);
+        
+        // Save for demo/admin usage
+        localStorage.setItem('lastHarnessSpecs', JSON.stringify(specs));
+        
         setParsedSpecs(specs);
         setStep("review");
         toast({
