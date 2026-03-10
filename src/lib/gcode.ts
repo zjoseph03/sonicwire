@@ -62,6 +62,7 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         `M42 P${config.cutPin} S0 ; Turn Cutter OFF (Safety Check)`,
         `G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to ${config.safeZ}mm to clear bed`,
         "G4 P1000 ; Wait 1000ms (1s) for startup",
+        `G0 Z2.0 F${config.feedRateMove} ; Lower Z to working height`,
     ];
 
     // 1. Analyze Scheme for Scaling
@@ -104,6 +105,8 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
 
         commands.push(`; --- Wire ${index + 1}: ${wire.id} (${wire.color}) ---`);
         commands.push(`; Original: ${wire.lengthMm.toFixed(1)}mm -> Printed: ${printLength.toFixed(1)}mm`);
+
+        commands.push("G92 E0 ; Reset Extruder");
         
         // Move to Start
         commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
@@ -124,6 +127,8 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push(`G4 P${config.cutDuration} ; Wait ${config.cutDuration}ms for cut to complete`);
         commands.push(`M42 P${config.cutPin} S0 ; DEACTIVATE CUTTER (Pin ${config.cutPin} set to Low/0)`);
 
+        // Reverse Operation (Return logic)
+        commands.push(`G1 Y${config.startY} E-${extrusionAmount.toFixed(4)} F${config.feedRateExtrude} ; FULL REVERSE back to start`);
         
         // Retract slightly to prevent ooze/drag while moving to next
         commands.push("G1 E-1 F2000 ; Retract filament 1mm to prevent ooze"); 
