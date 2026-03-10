@@ -20,7 +20,7 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     startX: 10,
     startY: 10,
     wireSpacingX: 10,
-    extrusionRatio: 0.03,
+    extrusionRatio: 1.0, // 1:1 Movement to Extrusion (Feed 1mm wire for 1mm travel)
     feedRateMove: 3000,
     feedRateExtrude: 1500,
     cutPin: 32,
