@@ -25,9 +25,10 @@ export async function parseSchematicPDF(file: File): Promise<ParsedSpecification
       )
     );
 
-    // Toggle between dev and prod functions:
-    const FUNCTION_NAME = 'parse-schematic';      // Production
-    // const FUNCTION_NAME = 'parse-schematic-dev';  // Development
+    // Automatically select function based on environment:
+    // Dev environment (npm run dev) -> parse-schematic-dev
+    // Production build -> parse-schematic
+    const FUNCTION_NAME = import.meta.env.DEV ? 'parse-schematic-dev' : 'parse-schematic';
     
     console.log(`Invoking '${FUNCTION_NAME}' Edge Function...`);
     
