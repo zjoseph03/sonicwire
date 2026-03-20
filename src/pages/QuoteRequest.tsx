@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Pricing Constants
 const BASE_FEE = 29.99;      // Reduced setup fee
-const PRICE_PER_CM = 0.15;   // Competitive pricing per cm (covers material & processing)
+const PRICE_PER_CM = 0.01;   // Competitive pricing per cm (covers material & processing)
 
 const parseLengthToCm = (lengthStr: string): number => {
   if (!lengthStr || lengthStr === "null") return 0;
