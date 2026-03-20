@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Printer, Upload, Play, Terminal, Zap, RefreshCw, ChevronDown, Edit, Eye, FileCode, Check, FileText, X, AlertTriangle, List, CheckCircle } from "lucide-react";
+import { Printer, Upload, Play, Terminal, Zap, RefreshCw, ChevronDown, ChevronUp, Edit, Eye, FileCode, Check, FileText, X, AlertTriangle, List, CheckCircle } from "lucide-react";
 import { generateGCode, PrinterConfig, DEFAULT_CONFIG } from "@/lib/gcode";
 import { ParsedSpecifications, WireCut } from "@/lib/gemini";
 import Navbar from "@/components/Navbar";
@@ -558,6 +559,98 @@ const AdminDemo = () => {
                                                  </div>
                                             </CardContent>
                                         </Card>
+
+                                        {/* G-Code Preview & Edit Section */}
+                                        <Collapsible
+                                            open={isPreviewOpen}
+                                            onOpenChange={setIsPreviewOpen}
+                                            className="border rounded-md p-2 bg-muted/30"
+                                        >
+                                            <div className="flex items-center justify-between px-2">
+                                                <div className="flex items-center gap-4">
+                                                    <Label className="text-sm font-semibold flex items-center gap-2">
+                                                        <FileCode className="w-4 h-4" />
+                                                        G-Code Preview
+                                                    </Label>
+                                                    {isPreviewOpen && (
+                                                        <div className="flex items-center bg-background rounded-md border p-0.5 h-7 shadow-sm">
+                                                            <Button 
+                                                                variant={!isEditingGcode ? "secondary" : "ghost"} 
+                                                                size="sm" 
+                                                                onClick={() => setIsEditingGcode(false)}
+                                                                className="h-6 text-xs px-2 rounded-sm"
+                                                            >
+                                                                <Eye className="w-3 h-3 mr-1.5 opacity-70"/> View
+                                                            </Button>
+                                                            <Button 
+                                                                variant={isEditingGcode ? "secondary" : "ghost"} 
+                                                                size="sm" 
+                                                                onClick={() => setIsEditingGcode(true)}
+                                                                className="h-6 text-xs px-2 rounded-sm"
+                                                            >
+                                                                <Edit className="w-3 h-3 mr-1.5 opacity-70"/> Edit
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <CollapsibleTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                                                        {isPreviewOpen ? (
+                                                            <ChevronUp className="h-4 w-4" />
+                                                        ) : (
+                                                            <ChevronDown className="h-4 w-4" />
+                                                        )}
+                                                        <span className="sr-only">Toggle Preview</span>
+                                                    </Button>
+                                                </CollapsibleTrigger>
+                                            </div>
+                                            <CollapsibleContent className="mt-2 text-sm">
+                                                {isEditingGcode ? (
+                                                    <div className="space-y-2">
+                                                        <Textarea 
+                                                            value={gcodePreview}
+                                                            onChange={(e) => setGcodePreview(e.target.value)}
+                                                            className="font-mono text-xs h-[300px] bg-background resize-none focus-visible:ring-1"
+                                                            placeholder="Generated G-Code will appear here..."
+                                                        />
+                                                        <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+                                                            <Check className="w-3 h-3 text-green-600" /> 
+                                                            Edits apply instantly. Switch to View to see formatting.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                     <ScrollArea className="h-[300px] w-full bg-background rounded-md border text-xs font-mono shadow-sm">
+                                                        <div className="p-2 space-y-0.5">
+                                                            {gcodePreview.split('\n').map((line, i) => {
+                                                                const trimmed = line.trim();
+                                                                if (!trimmed) return null; // Skip empty display lines
+                                                                
+                                                                const isFullComment = trimmed.startsWith(';');
+                                                                const parts = line.split(';');
+                                                                const command = parts[0];
+                                                                const comment = parts.slice(1).join(';');
+                                                                
+                                                                return (
+                                                                    <div key={i} className={`flex gap-3 hover:bg-muted/50 px-2 py-0.5 rounded-sm transition-colors ${isFullComment ? 'opacity-80' : ''}`}>
+                                                                        <span className="text-muted-foreground/30 select-none w-6 text-right flex-shrink-0 text-[10px] pt-0.5">{i+1}</span>
+                                                                        <div className="flex-grow whitespace-pre-wrap break-all">
+                                                                            {isFullComment ? (
+                                                                                <span className="italic text-green-600/90 font-medium">{trimmed}</span>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <span className="font-bold text-foreground/90">{command}</span>
+                                                                                    {comment && <span className="italic text-muted-foreground ml-1">;{comment}</span>}
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </ScrollArea>
+                                                )}
+                                            </CollapsibleContent>
+                                        </Collapsible>
 
                                         <Card className="h-full flex flex-col min-h-[400px]">
                                             <CardHeader>
