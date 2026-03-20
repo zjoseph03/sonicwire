@@ -652,11 +652,11 @@ const AdminDemo = () => {
                                             </CollapsibleContent>
                                         </Collapsible>
 
-                                        <Card className="h-full flex flex-col min-h-[400px]">
+                                        <Card className="flex flex-col">
                                             <CardHeader>
                                                 <CardTitle className="text-sm">Serial Terminal</CardTitle>
                                             </CardHeader>
-                                            <CardContent className="flex-grow flex flex-col gap-4">
+                                            <CardContent className="flex flex-col gap-4">
                                                 <div className="bg-black text-green-500 font-mono text-xs p-3 rounded h-[200px] overflow-y-auto flex flex-col-reverse shadow-inner">
                                                     {logs.length === 0 && <span className="opacity-50 italic">System ready...</span>}
                                                     {logs.map((log, i) => (
@@ -664,7 +664,7 @@ const AdminDemo = () => {
                                                     ))}
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-2 mt-auto">
+                                                <div className="grid grid-cols-2 gap-2 mt-4">
                                                     <Button onClick={sendGCode} disabled={!isConnected || isPrinting || !specs} className="w-full">
                                                         {isPrinting ? <RefreshCw className="w-4 h-4 animate-spin mr-2"/> : <Play className="w-4 h-4 mr-2"/>}
                                                         {isPrinting ? "Printing..." : "Run Job"}

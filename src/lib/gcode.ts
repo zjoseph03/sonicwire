@@ -17,7 +17,7 @@ export interface PrinterConfig {
 export const DEFAULT_CONFIG: PrinterConfig = {
     bedSizeX: 220,
     bedSizeY: 220,
-    startX: 10,
+    startX: 60,
     startY: 10,
     wireSpacingX: 10,
     extrusionRatio: 1.0, // 1:1 Movement to Extrusion (Feed 1mm wire for 1mm travel)
@@ -55,14 +55,13 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         "; SonicWire Harness Generation",
         `; Source: ${specs.isSchematic ? 'Schematic' : 'Wire List'}`,
         `; Wires: ${specs.wires.length}`,
-        "G28 ; Home all axes (Initialize Printer)",
         "G90 ; Set to Absolute Positioning Mode",
         "G21 ; Set Units to Millimeters",
         "M83 ; Set Extruder to Relative Mode",
         `M42 P${config.cutPin} S0 ; Turn Cutter OFF (Safety Check)`,
         `G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to ${config.safeZ}mm to clear bed`,
         "G4 P1000 ; Wait 1000ms (1s) for startup",
-        `G0 Z2.0 F${config.feedRateMove} ; Lower Z to working height`,
+        `G0 Z30.0 F${config.feedRateMove} ; Lower Z to working height`,
     ];
 
     // 1. Analyze Scheme for Scaling
@@ -95,8 +94,8 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         const currentX = config.startX + (index * config.wireSpacingX);
         
         // Check X bounds
-        if (currentX > (config.bedSizeX - 10)) {
-            commands.push(`; SKIP Wire ${index + 1}: X-axis limit reached`);
+        if (currentX < 59.15 || currentX > 163.15) {
+            commands.push(`; SKIP Wire ${index + 1}: X-axis out of bounds (${currentX}mm). Range: [59.15, 163.15]`);
             return;
         }
 
@@ -127,8 +126,8 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push(`G4 P${config.cutDuration} ; Wait ${config.cutDuration}ms for cut to complete`);
         commands.push(`M42 P${config.cutPin} S0 ; DEACTIVATE CUTTER (Pin ${config.cutPin} set to Low/0)`);
 
-        // Reverse Operation (Return logic)
-        commands.push(`G1 Y${config.startY} E-${extrusionAmount.toFixed(4)} F${config.feedRateExtrude} ; FULL REVERSE back to start`);
+        // Return to start position (Y only)
+        commands.push(`G0 Y${config.startY} F${config.feedRateMove} ; Return y-axis to start position`);
         
         // Retract slightly to prevent ooze/drag while moving to next
         commands.push("G1 E-1 F2000 ; Retract filament 1mm to prevent ooze"); 
