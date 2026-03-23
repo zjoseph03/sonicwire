@@ -14,6 +14,8 @@ export interface PrinterConfig {
     workingZ: number;
     cutDuration: number;
     preExtrudeMm: number;
+    minSafeX: number;
+    maxSafeX: number;
 }
 
 export const DEFAULT_CONFIG: PrinterConfig = {
@@ -30,6 +32,8 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     workingZ: 35.0,
     cutDuration: 1000,
     preExtrudeMm: 35.0,
+    minSafeX: 64.15,
+    maxSafeX: 158.15
 };
 
 // Parse length string to mm number
@@ -95,11 +99,13 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
 
     // 2. Generate Paths
     processedWires.forEach((wire, index) => {
-        const currentX = config.startX + (index * config.wireSpacingX);
+        // Calculate X position based on index and spacing
+        let currentX = config.startX + (index * config.wireSpacingX);
         
-        // Check X bounds
-        if (currentX < 64.15 || currentX > 158.15) {
-            commands.push(`; SKIP Wire ${index + 1}: X-axis out of bounds (${currentX}mm). Range: [64.15, 158.15]`);
+        // Safety check: specific to X-axis bounds provided
+        // We use config.minSafeX and config.maxSafeX to ensure we stay within safe limits
+        if (currentX < config.minSafeX || currentX > config.maxSafeX) {
+            commands.push(`; SKIP Wire ${index + 1}: X-axis out of bounds (${currentX.toFixed(2)}mm). Safe Range: [${config.minSafeX}, ${config.maxSafeX}]`);
             return;
         }
 
@@ -107,11 +113,12 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         const extrusionAmount = printLength * config.extrusionRatio;
 
         commands.push(`; --- Wire ${index + 1}: ${wire.id} (${wire.color}) ---`);
+        commands.push(`; X-Pos: ${currentX.toFixed(2)}mm`);
         commands.push(`; Original: ${wire.lengthMm.toFixed(1)}mm -> Printed: ${printLength.toFixed(1)}mm`);
 
         commands.push("G92 E0 ; Reset Extruder");
         
-        // Move to Start
+        // Move to Start Position (X shifts for each wire)
         commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} Z${config.workingZ.toFixed(1)} F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
         
         // Pause to stabilize
