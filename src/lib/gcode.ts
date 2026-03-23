@@ -11,7 +11,9 @@ export interface PrinterConfig {
     feedRateExtrude: number;
     cutPin: number;
     safeZ: number;
+    workingZ: number;
     cutDuration: number;
+    preExtrudeMm: number;
 }
 
 export const DEFAULT_CONFIG: PrinterConfig = {
@@ -25,7 +27,9 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     feedRateExtrude: 1500,
     cutPin: 32,
     safeZ: 100,
-    cutDuration: 1000
+    workingZ: 35.0,
+    cutDuration: 1000,
+    preExtrudeMm: 35.0,
 };
 
 // Parse length string to mm number
@@ -61,7 +65,7 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         `M42 P${config.cutPin} S0 ; Turn Cutter OFF (Safety Check)`,
         `G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to ${config.safeZ}mm to clear bed`,
         "G4 P1000 ; Wait 1000ms (1s) for startup",
-        `G0 Z35.0 F${config.feedRateMove} ; Lower Z to working height`,
+        `G0 Z${config.workingZ.toFixed(1)} F${config.feedRateMove} ; Lower Z to working height`,
     ];
 
     // 1. Analyze Scheme for Scaling
@@ -108,15 +112,28 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push("G92 E0 ; Reset Extruder");
         
         // Move to Start
-        commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} Z35.0 F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
+        commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} Z${config.workingZ.toFixed(1)} F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
         
         // Pause to stabilize
         commands.push("G4 P500 ; Pause 0.5s to stabilize before extrusion");
 
-        // Extrude (Move Y + Extrude E)
-        // We move Y to (Start + Length)
-        const targetY = config.startY + printLength;
-        commands.push(`G1 Y${targetY.toFixed(2)} E${extrusionAmount.toFixed(4)} F${config.feedRateExtrude} ; Extrude wire length (${printLength.toFixed(1)}mm)`);
+        // Pre-extrude preExtrudeMm worth alone
+        const preExtrudeMm = config.preExtrudeMm;
+        // If wire is less than preExtrudeMm, we still extrude preExtrudeMm (as requested)
+        const effectivePreExtrude = preExtrudeMm; 
+        
+        commands.push(`G1 E${(effectivePreExtrude * config.extrusionRatio).toFixed(4)} F${config.feedRateExtrude} ; Pre-extrude ${effectivePreExtrude}mm stationary`);
+
+        // Extrude remaining (Move Y + Extrude E)
+        // We move Y to (Start + (Length - preExtrudeMm))
+        if (printLength > preExtrudeMm) {
+            const moveLength = printLength - preExtrudeMm;
+            const moveExtrusion = moveLength * config.extrusionRatio;
+            const targetY = config.startY + moveLength;
+            commands.push(`G1 Y${targetY.toFixed(2)} E${moveExtrusion.toFixed(4)} F${config.feedRateExtrude} ; Extrude remaining ${moveLength.toFixed(1)}mm`);
+        } else {
+             commands.push(`; Total length ${printLength.toFixed(1)}mm <= ${preExtrudeMm}mm. No further movement.`);
+        }
 
         // Dwell before cut
         commands.push("G4 P500 ; Pause 0.5s before cutting");
