@@ -24,7 +24,7 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     feedRateMove: 3000,
     feedRateExtrude: 1500,
     cutPin: 32,
-    safeZ: 50,
+    safeZ: 100,
     cutDuration: 1000
 };
 
@@ -61,7 +61,7 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         `M42 P${config.cutPin} S0 ; Turn Cutter OFF (Safety Check)`,
         `G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to ${config.safeZ}mm to clear bed`,
         "G4 P1000 ; Wait 1000ms (1s) for startup",
-        `G0 Z30.0 F${config.feedRateMove} ; Lower Z to working height`,
+        `G0 Z35.0 F${config.feedRateMove} ; Lower Z to working height`,
     ];
 
     // 1. Analyze Scheme for Scaling
@@ -108,7 +108,7 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push("G92 E0 ; Reset Extruder");
         
         // Move to Start
-        commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
+        commands.push(`G0 X${currentX.toFixed(2)} Y${config.startY} Z35.0 F${config.feedRateMove} ; Move to start position for Wire ${index + 1}`);
         
         // Pause to stabilize
         commands.push("G4 P500 ; Pause 0.5s to stabilize before extrusion");
@@ -126,10 +126,11 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push(`G4 P${config.cutDuration} ; Wait ${config.cutDuration}ms for cut to complete`);
         commands.push(`M42 P${config.cutPin} S0 ; DEACTIVATE CUTTER (Pin ${config.cutPin} set to Low/0)`);
 
+        commands.push(`G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to clear`);
+
         // Return to start position (Y only)
         commands.push(`G0 Y${config.startY} F${config.feedRateMove} ; Return y-axis to start position`);
         
-        // Retract slightly to prevent ooze/drag while moving to next
         commands.push("G1 E-1 F2000 ; Retract filament 1mm to prevent ooze"); 
     });
 
