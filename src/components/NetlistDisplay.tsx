@@ -38,6 +38,23 @@ const WIRE_COLORS = [
   "Yellow", "Orange", "Brown", "Purple", "Grey", "Pink"
 ];
 
+const COLOR_MAP: Record<string, string> = {
+  "RD": "Red", "BK": "Black", "WH": "White", "GN": "Green", "BU": "Blue",
+  "YL": "Yellow", "YE": "Yellow", "OR": "Orange", "BN": "Brown", "VT": "Purple", "GY": "Grey", "PK": "Pink"
+};
+
+const normalizeColor = (inputColor: string | null | undefined): string => {
+    if (!inputColor || inputColor === "null") return "";
+    const clean = inputColor.toUpperCase().trim();
+    // Check map
+    if (COLOR_MAP[clean]) return COLOR_MAP[clean];
+    // Check if it's already a full name in our list (case-insensitive)
+    const directMatch = WIRE_COLORS.find(c => c.toLowerCase() === clean.toLowerCase());
+    if (directMatch) return directMatch;
+    
+    return inputColor; // Return original if unknown
+};
+
 export default function NetlistDisplay({ specs, onUpdateWire, onAddWire }: NetlistDisplayProps) {
   const { wires, missingInfo, isSchematic } = specs;
   const hasWires = wires && wires.length > 0;
@@ -168,20 +185,21 @@ export default function NetlistDisplay({ specs, onUpdateWire, onAddWire }: Netli
                       <div className="flex items-center gap-2">
                         <Palette className="w-4 h-4 text-primary" />
                         <Select 
-                          value={
-                             WIRE_COLORS.find(c => c.toLowerCase() === (wire.color || "").toLowerCase()) ||
-                             (wire.color && wire.color !== "null" ? wire.color : "")
-                          }
+                          value={normalizeColor(wire.color)}
                           onValueChange={(value) => onUpdateWire?.(index, 'color', value)}
                         >
-                          <SelectTrigger className={`h-8 w-32 ${wire.color === "null" ? "border-red-300 bg-red-50" : ""}`}>
+                          <SelectTrigger className={`h-8 w-32 ${!wire.color || wire.color === "null" ? "border-red-300 bg-red-50" : ""}`}>
                             <SelectValue placeholder="Select Color" />
                           </SelectTrigger>
                           <SelectContent>
                             {WIRE_COLORS.map((color) => (
                               <SelectItem key={color} value={color}>
                                 <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full border border-muted" style={{ backgroundColor: color.toLowerCase() }}></div>
+                                  {/* Map simple color names to CSS colors */}
+                                  <div 
+                                    className="w-3 h-3 rounded-full border border-muted" 
+                                    style={{ backgroundColor: color.toLowerCase() }}
+                                  />
                                   {color}
                                 </div>
                               </SelectItem>
