@@ -18,13 +18,29 @@ CREATE TABLE IF NOT EXISTS public.orders (
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
 -- Allow public to create orders
-CREATE POLICY "Public create orders" ON public.orders
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'orders' 
+        AND policyname = 'Public create orders'
+    ) THEN
+        CREATE POLICY "Public create orders" ON public.orders FOR INSERT TO anon WITH CHECK (true);
+    END IF;
+END $$;
 
 -- Allow authenticated users (admins) to view all orders
-CREATE POLICY "Authenticated view orders" ON public.orders
-  FOR SELECT
-  TO authenticated
-  USING (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'orders' 
+        AND policyname = 'Authenticated view orders'
+    ) THEN
+        CREATE POLICY "Authenticated view orders" ON public.orders FOR SELECT TO authenticated USING (true);
+    END IF;
+END $$;

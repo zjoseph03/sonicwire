@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Pricing Constants
 const BASE_FEE = 29.99;      // Reduced setup fee
-const PRICE_PER_CM = 0.01;   // Competitive pricing per cm (covers material & processing)
+const PRICE_PER_CM = 0.018;   // Competitive pricing per cm (covers material & processing)
 
 const parseLengthToCm = (lengthStr: string): number => {
   if (!lengthStr || lengthStr === "null") return 0;
@@ -52,6 +52,13 @@ const QuoteRequest = () => {
   const totalCost = parsedSpecs?.wires ? (
     BASE_FEE + (totalLengthCm * PRICE_PER_CM * quantity)
   ) : 0;
+
+  const hasMissingRequirements = parsedSpecs?.wires?.some(wire => 
+      !wire.id || wire.id === "null" ||
+      !wire.length || wire.length === "null" ||
+      !wire.gauge || wire.gauge === "null" ||
+      !wire.color || wire.color === "null"
+  ) || false;
 
   useEffect(() => {
     console.log("Wire Cut Tool visited at:", new Date().toISOString());
@@ -172,6 +179,15 @@ const QuoteRequest = () => {
   };
 
   const handleConfirm = async () => {
+    if (hasMissingRequirements) {
+        toast({
+            title: "Missing Requirements",
+            description: "Please fill in all red highlighted fields (ID, Length, Gauge, Color) before submitting.",
+            variant: "destructive"
+        });
+        return;
+    }
+
     try {
         const orderData = {
             total_price: totalCost,
@@ -624,10 +640,15 @@ const QuoteRequest = () => {
                   <Button
                     size="lg"
                     onClick={handleConfirm}
-                    className="px-8 shadow-lg shadow-primary/20 bg-green-600 hover:bg-green-700 text-white"
+                    disabled={hasMissingRequirements}
+                    className={`px-8 shadow-lg shadow-primary/20 transition-all ${
+                      hasMissingRequirements 
+                        ? "opacity-60 cursor-not-allowed bg-muted text-muted-foreground border border-border hover:bg-muted" 
+                        : "bg-green-600 hover:bg-green-700 text-white"
+                    }`}
                   >
-                    Submit Order
-                    <ChevronRight className="w-5 h-5 ml-2" />
+                    {hasMissingRequirements ? "Complete Highlighted Fields" : "Submit Order"}
+                    {!hasMissingRequirements && <ChevronRight className="w-5 h-5 ml-2" />}
                   </Button>
                 </div>
               </motion.div>

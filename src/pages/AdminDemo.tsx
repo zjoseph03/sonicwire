@@ -8,12 +8,41 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Printer, Upload, Play, Terminal, Zap, RefreshCw, ChevronDown, ChevronUp, Edit, Eye, FileCode, Check, FileText, X, AlertTriangle, List, CheckCircle } from "lucide-react";
 import { generateGCode, PrinterConfig, DEFAULT_CONFIG } from "@/lib/gcode";
 import { ParsedSpecifications, WireCut } from "@/lib/gemini";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
+
+// Helper for color bubbles
+const getColorStyle = (code: string) => {
+    const map: Record<string, string> = {
+        "RD": "red",
+        "BK": "black",
+        "WH": "white",
+        "GN": "green",
+        "BU": "blue",
+        "YL": "yellow",
+        "OR": "orange",
+        "BN": "saddlebrown", // brown
+        "VT": "purple",
+        "GY": "grey",
+        "PK": "pink"
+    };
+
+    const color = map[code?.toUpperCase()] || code?.toLowerCase() || "grey";
+    
+    // For white and yellow, use black text. Others use white text for better contrast.
+    const isLight = ["white", "yellow", "orange", "pink"].includes(color.toLowerCase()) || code?.toUpperCase() === "WH" || code?.toUpperCase() === "YL";
+    
+    return {
+        backgroundColor: color,
+        color: isLight ? "black" : "white",
+        border: "1px solid black" // User invoked black border
+    };
+};
 
 // Web Serial API types (browser specific)
 interface SerialPort {
@@ -311,19 +340,54 @@ const AdminDemo = () => {
     const handleMarkComplete = async () => {
         if (!selectedOrder) return;
         try {
-            const { error } = await supabase
+            const { error, count } = await supabase
                 .from('orders')
                 .update({ status: 'completed' })
-                .eq('id', selectedOrder.id);
+                .eq('id', selectedOrder.id)
+                .select('*', { count: 'exact' });
             
             if (error) throw error;
             
+            // If count is 0, it means no rows were updated (likely RLS policy blocking update)
+            if (count === 0) {
+                toast.error("Permission denied: Unable to update order status");
+                return;
+            }
+
             toast.success("Order marked as completed");
             // Update local state
              setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status: 'completed' } : o));
              setSelectedOrder(prev => prev ? { ...prev, status: 'completed' } : null);
         } catch (error: any) {
+            console.error('Error updating order:', error);
             toast.error("Failed to update status");
+        }
+    };
+
+    const handleMarkAllComplete = async () => {
+        const pendingOrders = orders.filter(o => o.status !== 'completed');
+        if (pendingOrders.length === 0) return;
+
+        try {
+            const { error, count } = await supabase
+                .from('orders')
+                .update({ status: 'completed' })
+                .in('id', pendingOrders.map(o => o.id)) // Mark all pending as completed
+                .select('*', { count: 'exact' });
+
+            if (error) throw error;
+             
+             if (count === 0) {
+                 toast.error("Permission denied: Unable to update orders");
+                 return;
+             }
+
+            toast.success("All pending orders marked as completed");
+             setOrders(prev => prev.map(o => ({ ...o, status: 'completed' })));
+             if (selectedOrder) setSelectedOrder(prev => prev ? { ...prev, status: 'completed' } : null);
+        } catch (error: any) {
+            console.error(error);
+            toast.error("Failed to update all orders");
         }
     };
 
@@ -338,45 +402,90 @@ const AdminDemo = () => {
                 <div className="grid grid-cols-12 gap-6">
                     {/* Sidebar: Job Queue */}
                     <div className="col-span-12 md:col-span-3 space-y-4">
-                        <Card className="h-[calc(100vh-150px)] flex flex-col">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <List className="w-5 h-5"/> Job Queue
-                                </CardTitle>
-                                <CardDescription>Pending Orders</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow p-0">
-                                <ScrollArea className="h-full">
-                                    <div className="divide-y">
-                                        {orders.map((order) => (
-                                            <div 
-                                                key={order.id}
-                                                className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${selectedOrder?.id === order.id ? 'bg-muted border-l-4 border-primary' : ''}`}
-                                                onClick={() => setSelectedOrder(order)}
-                                            >
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <span className="font-semibold text-sm truncate max-w-[120px]">{order.file_name || 'Untitled'}</span>
-                                                    <Badge variant={order.status === 'completed' ? 'secondary' : 'default'} className="text-[10px]">
-                                                        {order.status}
-                                                    </Badge>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground flex justify-between">
-                                                    <span>{order.wire_count} Wires</span>
-                                                    <span>{formatDate(order.created_at)}</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground mt-1">
-                                                     ID: ...{order.id.slice(-6)}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {orders.length === 0 && (
-                                            <div className="p-4 text-center text-sm text-muted-foreground">
-                                                No orders found.
-                                            </div>
-                                        )}
+                        <Card className="h-[calc(100vh-150px)] flex flex-col overflow-hidden">
+                             <Tabs defaultValue="pending" className="flex flex-col h-full">
+                                <CardHeader className="pb-2 flex-shrink-0">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <List className="w-5 h-5"/> Job Queue
+                                        </CardTitle>
                                     </div>
-                                </ScrollArea>
-                            </CardContent>
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="pending">Pending</TabsTrigger>
+                                        <TabsTrigger value="completed">Completed</TabsTrigger>
+                                    </TabsList>
+                                </CardHeader>
+                                <CardContent className="flex-grow p-0 overflow-hidden">
+                                     <TabsContent value="pending" className="h-full mt-0">
+                                        <ScrollArea className="h-full">
+                                            <div className="p-2 sticky top-0 bg-background z-10 border-b flex justify-end">
+                                               <Button variant="ghost" size="sm" onClick={handleMarkAllComplete} className="text-xs text-muted-foreground hover:text-foreground">
+                                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                                  Mark All Complete
+                                               </Button>
+                                            </div>
+                                            <div className="divide-y relative">
+                                                {orders.filter(o => o.status !== 'completed').length === 0 && (
+                                                     <div className="p-8 text-center text-sm text-muted-foreground italic">
+                                                         No pending orders.
+                                                     </div>
+                                                )}
+                                                {orders.filter(o => o.status !== 'completed').map((order) => (
+                                                    <div 
+                                                        key={order.id}
+                                                        className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors ${selectedOrder?.id === order.id ? 'bg-muted border-l-4 border-primary' : ''}`}
+                                                        onClick={() => setSelectedOrder(order)}
+                                                    >
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <span className="font-semibold text-sm truncate max-w-[120px]">{order.file_name || 'Untitled'}</span>
+                                                            <Badge variant="default" className="text-[10px] bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-200">
+                                                                Pending
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground flex justify-between">
+                                                            <span className="font-mono text-[10px]">{order.wire_count} Wires</span>
+                                                            <span className="text-[10px]">{formatDate(order.created_at)}</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-muted-foreground mt-1 font-mono opacity-70">
+                                                             ID: ...{order.id.slice(-6)}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </ScrollArea>
+                                     </TabsContent>
+
+                                     <TabsContent value="completed" className="h-full mt-0">
+                                        <ScrollArea className="h-full">
+                                            <div className="divide-y">
+                                                {orders.filter(o => o.status === 'completed').length === 0 && (
+                                                     <div className="p-8 text-center text-sm text-muted-foreground italic">
+                                                         No details found.
+                                                     </div>
+                                                )}
+                                                {orders.filter(o => o.status === 'completed').map((order) => (
+                                                    <div 
+                                                        key={order.id}
+                                                        className={`p-3 cursor-pointer hover:bg-muted/50 transition-colors opacity-70 hover:opacity-100 ${selectedOrder?.id === order.id ? 'bg-muted border-l-4 border-muted-foreground' : ''}`}
+                                                        onClick={() => setSelectedOrder(order)}
+                                                    >
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <span className="font-semibold text-sm truncate max-w-[120px] decoration-slate-400">{order.file_name || 'Untitled'}</span>
+                                                            <Badge variant="secondary" className="text-[10px]">
+                                                                Completed
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground flex justify-between">
+                                                            <span className="font-mono text-[10px]">{order.wire_count} Wires</span>
+                                                            <span className="text-[10px]">{formatDate(order.created_at)}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </ScrollArea>
+                                     </TabsContent>
+                                </CardContent>
+                            </Tabs>
                         </Card>
                     </div>
 
@@ -470,7 +579,13 @@ const AdminDemo = () => {
                                                                              <div className="flex items-center gap-3">
                                                                                 <span className="font-mono text-xs text-muted-foreground w-6">#{idx + 1}</span>
                                                                                 <span className="font-medium">{wire.id}</span>
-                                                                                <Badge variant="secondary" className="text-[10px]">{wire.color}</Badge>
+                                                                                <Badge 
+                                                                                    variant="outline" 
+                                                                                    style={getColorStyle(wire.color)}
+                                                                                    className="text-[10px] min-w-[30px] justify-center"
+                                                                                >
+                                                                                    {wire.color}
+                                                                                </Badge>
                                                                              </div>
                                                                              <div className="flex items-center gap-4">
                                                                                  <span className="font-mono text-xs">{wire.length}</span>
