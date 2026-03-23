@@ -17,7 +17,7 @@ export interface PrinterConfig {
 export const DEFAULT_CONFIG: PrinterConfig = {
     bedSizeX: 220,
     bedSizeY: 220,
-    startX: 60,
+    startX: 65,
     startY: 10,
     wireSpacingX: 10,
     extrusionRatio: 1.0, // 1:1 Movement to Extrusion (Feed 1mm wire for 1mm travel)
@@ -94,8 +94,8 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         const currentX = config.startX + (index * config.wireSpacingX);
         
         // Check X bounds
-        if (currentX < 59.15 || currentX > 163.15) {
-            commands.push(`; SKIP Wire ${index + 1}: X-axis out of bounds (${currentX}mm). Range: [59.15, 163.15]`);
+        if (currentX < 64.15 || currentX > 158.15) {
+            commands.push(`; SKIP Wire ${index + 1}: X-axis out of bounds (${currentX}mm). Range: [64.15, 158.15]`);
             return;
         }
 
