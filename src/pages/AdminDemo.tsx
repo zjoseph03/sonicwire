@@ -25,17 +25,29 @@ const getColorStyle = (code: string) => {
         "GN": "green",
         "BU": "blue",
         "YL": "yellow",
+        "YE": "yellow", // Added YE support
         "OR": "orange",
         "BN": "saddlebrown", // brown
         "VT": "purple",
         "GY": "grey",
-        "PK": "pink"
+        "PK": "pink",
+        "SHIELD": "grey", // Shield wires
+        "DRAIN": "grey",
+        "BARE": "grey"
     };
 
-    const color = map[code?.toUpperCase()] || code?.toLowerCase() || "grey";
+    const upperCode = code?.toUpperCase()?.trim() || "";
+    // If exact match in map use it, else if it's a standard color name try using it, otherwise fallback to grey if it looks like garbage
+    // But keeping original logic of trying lowercase is fine for "blue", "red" inputs. 
+    // However, "ye" or "shield" falling through was the issue.
+    const color = map[upperCode] || code?.toLowerCase() || "grey";
     
     // For white and yellow, use black text. Others use white text for better contrast.
-    const isLight = ["white", "yellow", "orange", "pink"].includes(color.toLowerCase()) || code?.toUpperCase() === "WH" || code?.toUpperCase() === "YL";
+    // Explicitly check for WH/Yellow/White/Orange/Pink to ensure readability
+    const isLight = ["white", "yellow", "orange", "pink", "cyan", "lime", "gold", "silver"].includes(color.toLowerCase()) || 
+                   upperCode === "WH" || 
+                   upperCode === "YL" ||
+                   upperCode === "YE";
     
     return {
         backgroundColor: color,
