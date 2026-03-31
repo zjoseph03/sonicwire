@@ -149,13 +149,13 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
         commands.push(`M42 P${config.cutPin} S255 ; ACTIVATE CUTTER (Pin ${config.cutPin} set to High/255)`);
         commands.push(`G4 P${config.cutDuration} ; Wait ${config.cutDuration}ms for cut to complete`);
         commands.push(`M42 P${config.cutPin} S0 ; DEACTIVATE CUTTER (Pin ${config.cutPin} set to Low/0)`);
+        // commands.push("G1 E-5 F2000 ; Retract filament 5mm (0.5cm) to prevent ooze");
 
         commands.push(`G0 Z${config.safeZ} F${config.feedRateMove} ; Raise Z-Axis to clear`);
 
         // Return to start position (Y only)
         commands.push(`G0 Y${config.startY} F${config.feedRateMove} ; Return y-axis to start position`);
-        
-        commands.push("G1 E-1 F2000 ; Retract filament 1mm to prevent ooze"); 
+         
     });
 
     // Footer
