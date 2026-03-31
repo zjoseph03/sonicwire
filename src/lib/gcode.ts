@@ -26,12 +26,12 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     wireSpacingX: 10,
     extrusionRatio: 1.0, // 1:1 Movement to Extrusion (Feed 1mm wire for 1mm travel)
     feedRateMove: 3000,
-    feedRateExtrude: 1500,
+    feedRateExtrude: 3000,
     cutPin: 32,
     safeZ: 100,
-    workingZ: 35.0,
+    workingZ: 28.0,
     cutDuration: 1000,
-    preExtrudeMm: 35.0,
+    preExtrudeMm: 28.0,
     minSafeX: 64.15,
     maxSafeX: 158.15
 };
@@ -160,7 +160,7 @@ export const generateGCode = (specs: ParsedSpecifications, config: PrinterConfig
 
     // Footer
     commands.push("; Job Complete");
-    commands.push("G0 X0 Y200 F3000 ; Move bed forward to present harness");
+    commands.push("G0 X65 Y200 F3000 ; Move bed forward to present harness");
     commands.push("M84 ; Disable motors to release manual control");
 
     return commands;
