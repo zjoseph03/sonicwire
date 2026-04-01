@@ -23,7 +23,7 @@ export const DEFAULT_CONFIG: PrinterConfig = {
     bedSizeY: 220,
     startX: 65,
     startY: 10,
-    wireSpacingX: 10,
+    wireSpacingX: 20,
     extrusionRatio: 1.0, // 1:1 Movement to Extrusion (Feed 1mm wire for 1mm travel)
     feedRateMove: 3000,
     feedRateExtrude: 3000,
