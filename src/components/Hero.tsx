@@ -1,13 +1,9 @@
-import { useRef } from "react";
-import { ArrowRight, Zap, Clock, Shield, FileText, Play, ExternalLink, Maximize2 } from "lucide-react";
+import { ArrowRight, Zap, Clock, Shield, FileText, Play, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
-import demoVideo from "../../media_content/SonicWireWebsiteVideo.mp4";
 import articlePreviewImage from "../../media_content/WHN1PageSS.png";
 
 const Hero = () => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
   const handleQuoteClick = () => {
     // Track in Clarity
     if (typeof window !== 'undefined' && (window as any).clarity) {
@@ -18,26 +14,6 @@ const Hero = () => {
       (window as any).gtag('event', 'quote_button_click', {
         button_location: 'hero'
       });
-    }
-  };
-
-  const handleFullscreen = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.requestFullscreen) {
-      video.requestFullscreen();
-      return;
-    }
-
-    const iOSVideo = video as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
-    if (iOSVideo.webkitEnterFullscreen) {
-      iOSVideo.webkitEnterFullscreen();
-      return;
-    }
-
-    if (video.parentElement?.requestFullscreen) {
-      video.parentElement.requestFullscreen();
     }
   };
 
@@ -192,26 +168,15 @@ const Hero = () => {
                     Watch the demo
                   </span>
                 </div>
-                <video
-                  ref={videoRef}
-                  className="w-full aspect-video object-cover opacity-95"
-                  controls
-                  preload="metadata"
-                  playsInline
-                >
-                  <source src={demoVideo} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-
-                <button
-                  type="button"
-                  onClick={handleFullscreen}
-                  className="absolute right-4 top-4 z-30 inline-flex items-center gap-2 rounded-lg bg-black/70 backdrop-blur px-3 py-2 border border-white/10 text-white hover:bg-black/85 transition-colors"
-                  aria-label="Open video in fullscreen"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                  <span className="text-xs font-medium">Fullscreen</span>
-                </button>
+                <div className="relative aspect-video w-full bg-black">
+                  <iframe
+                    src="https://player.vimeo.com/video/1179764459?title=0&byline=0&portrait=0&badge=0&autopause=0&dnt=1"
+                    className="absolute inset-0 h-full w-full"
+                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
+                    allowFullScreen
+                    title="SonicWire demo video"
+                  />
+                </div>
               </div>
 
               <div className="p-5 space-y-3">
