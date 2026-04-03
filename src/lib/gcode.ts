@@ -17,7 +17,7 @@ export interface PrinterConfig {
     minSafeX: number;
     maxSafeX: number;
 }
-
+ 
 export const DEFAULT_CONFIG: PrinterConfig = {
     bedSizeX: 220,
     bedSizeY: 220,
